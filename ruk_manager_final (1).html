@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f5f3a">
+<title>Recyclables UK Manager</title>
+<style>
+:root{--g:#1f5f3a;--g2:#2d7a52;--g3:#e8f5ee;--bg:#f4f7f5;--b:#d9dfdb;--m:#66736b;--danger:#c0392b;--shadow:0 2px 8px rgba(0,0,0,.08);--radius:14px;--radius-sm:10px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:#172019;-webkit-text-size-adjust:100%}
+
+/* Header */
+header{background:var(--g);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:10}
+header h1{margin:0;font-size:20px}
+
+/* Top Tabs */
+.tabs{display:flex;gap:4px;background:#fff;border-bottom:1px solid var(--b);padding:8px 16px;position:sticky;top:54px;z-index:9}
+.tab{flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)}
+.tab.active{background:var(--g);color:#fff}
+
+/* Views */
+.view{display:none;padding:14px;max-width:900px;margin:0 auto}
+.view.active{display:block}
+
+/* Cards */
+.card{background:#fff;border:1px solid var(--b);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card h2{font-size:17px;margin:0 0 14px}
+.card h3{font-size:15px;margin:0 0 10px;color:var(--m)}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+
+label{font-size:12px;font-weight:700;color:var(--m);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
+input,select,textarea{width:100%;padding:12px;border:1px solid var(--b);border-radius:var(--radius-sm);font-size:15px;background:#fff;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(31,95,58,.12)}
+input[readonly],textarea[readonly],select:disabled{background:#f5f6f5;color:#66736b}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2366736b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* Buttons */
+.btn{border:0;border-radius:var(--radius-sm);padding:13px 16px;font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{opacity:.8}
+.btn-primary{background:var(--g);color:#fff}
+.btn-secondary{background:var(--g3);color:var(--g)}
+.btn-danger{background:#fff0f0;color:var(--danger)}
+.btn-ghost{background:transparent;color:var(--m)}
+.btn-block{width:100%}
+.btn-lg{padding:16px;font-size:16px;border-radius:var(--radius)}
+.btn-sm{padding:8px 12px;font-size:13px}
+
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row .btn{flex:1}
+
+/* Dashboard */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.stat-card{background:var(--g);color:#fff;border-radius:var(--radius);padding:16px;text-align:center}
+.stat-card.outbound{background:#8b5a2b}
+.stat-card h3{margin:0 0 6px;font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px}
+.stat-card .val{margin:0;font-size:28px;font-weight:800}
+
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.qa-btn{background:#fff;border:1px solid var(--b);border-radius:var(--radius);padding:18px 12px;text-align:center;cursor:pointer;box-shadow:var(--shadow)}
+.qa-btn .icon{font-size:28px;margin-bottom:6px;display:block}
+.qa-btn .label{font-size:14px;font-weight:700;color:var(--g)}
+.qa-btn:active{transform:scale(.97);opacity:.9}
+
+.section-title{font-size:13px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px}
+
+/* Lists */
+.list-item{background:#fff;border:1px solid var(--b);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow)}
+.list-item:active{border-color:var(--g);background:#f9f9f9}
+.list-item .title{font-weight:700;font-size:15px;margin-bottom:3px}
+.list-item .meta{font-size:13px;color:var(--m)}
+.list-item .actions{margin-top:8px;display:flex;gap:6px}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--g3);color:var(--g);font-size:12px;font-weight:700;margin:0 4px 4px 0}
+.chip .remove{width:16px;height:16px;border-radius:50%;background:var(--g);color:#fff;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+/* Stock */
+.stock-card{background:#fff;border:1px solid var(--b);border-radius:var(--radius);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
+.stock-card .stock-icon{width:48px;height:48px;border-radius:var(--radius-sm);background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.stock-card .stock-info{flex:1}
+.stock-card .stock-name{font-weight:700;font-size:16px;margin-bottom:2px}
+.stock-card .stock-code{font-size:12px;color:var(--m)}
+.stock-card .stock-qty{text-align:right}
+.stock-card .stock-val{font-size:24px;font-weight:800;color:var(--g)}
+
+/* Material rows */
+.mat-row{display:grid;grid-template-columns:2fr 1fr 1fr 44px;gap:8px;align-items:end;margin-bottom:10px}
+.mat-row .mat-name{grid-column:1/-1}
+@media(min-width:600px){.mat-row .mat-name{grid-column:auto}}
+.mat-row .remove{height:44px;padding:0;background:#fff0f0;color:var(--danger);border:1px solid var(--b);border-radius:var(--radius-sm);font-size:18px;cursor:pointer}
+
+/* Signature */
+.sig-wrap{border:1px solid var(--b);border-radius:var(--radius-sm);overflow:hidden;background:#fff}
+.sig-canvas{width:100%;height:140px;display:block;touch-action:none;background:#fff}
+.sig-tools{padding:8px;text-align:right}
+
+/* Modals */
+.modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;display:none}
+.modal.show{display:block}
+.modal-back{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5)}
+.modal-box{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:var(--radius) var(--radius) 0 0;padding:20px;max-height:90vh;overflow:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-header h3{margin:0;font-size:18px}
+.modal-close{background:none;border:none;font-size:24px;color:var(--m);cursor:pointer}
+
+/* Print View */
+.print-view{display:none;background:#fff;padding:30px;max-width:800px;margin:0 auto}
+.print-view h1{margin:0 0 8px;font-size:22px;color:var(--g)}
+.print-view .print-meta{color:#66736b;font-size:13px;margin-bottom:20px}
+.print-view .print-section{margin-bottom:18px}
+.print-view .print-section h3{margin:0 0 8px;font-size:14px;text-transform:uppercase;color:var(--g);border-bottom:2px solid var(--g);padding-bottom:4px}
+.print-view .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.print-view .material-table{width:100%;border-collapse:collapse;font-size:14px}
+.print-view .material-table th,.print-view .material-table td{padding:8px;border-bottom:1px solid #ddd}
+.print-view .material-table th{background:#f5f5f5;font-weight:700}
+.print-view .sig-img{max-width:200px;max-height:80px;border:1px solid #ddd;padding:4px}
+
+.empty{text-align:center;padding:40px;color:var(--m)}
+.empty .icon{font-size:48px;margin-bottom:12px}
+
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap input{padding-left:40px}
+.search-wrap::before{content:"🔍";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.5}
+
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--g3);color:var(--g)}
+
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:#222;color:#fff;padding:12px 24px;border-radius:999px;font-size:14px;font-weight:600;z-index:200;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* Stepper */
+.stepper{display:flex;gap:8px;margin-bottom:16px;overflow:auto}
+.step{white-space:nowrap;font-size:13px;font-weight:700;color:var(--m);opacity:.6}
+.step.active{opacity:1;color:var(--g)}
+.step.done{opacity:1;color:var(--g)}
+.step .num{width:24px;height:24px;border-radius:50%;background:var(--b);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;margin-right:4px}
+.step.active .num,.step.done .num{background:var(--g)}
+
+@media print{
+  .tabs,header,#toast,.no-print{display:none!important}
+  body{background:#fff}
+  .view{display:none!important;padding:0}
+  .view.active{display:none!important}
+  .print-view{display:block!important}
+}
+</style>
+</head>
+<body>
+
+<header><h1>♻️ Recyclables UK Manager</h1></header>
+
+<div class="tabs no-print">
+  <button class="tab active" onclick="showView('dashboard')">🏠 Home</button>
+  <button class="tab" onclick="showView('new-wtn')">➕ New WTN</button>
+  <button class="tab" onclick="showView('archive')">📄 Archive</button>
+  <button class="tab" onclick="showView('companies')">🏢 Companies</button>
+  <button class="tab" onclick="showView('stock')">📦 Stock</button>
+  <button class="tab" onclick="showView('settings')">⚙️ Settings</button>
+</div>
+
+<!-- HOME -->
+<div class="view active" id="view-dashboard">
+  <div class="stat-grid">
+    <div class="stat-card"><h3>INBOUND TODAY</h3><p class="val" id="dash-inbound">0</p></div>
+    <div class="stat-card outbound"><h3>OUTBOUND TODAY</h3><p class="val" id="dash-outbound">0</p></div>
+  </div>
+  <div class="qa-grid">
+    <div class="qa-btn" onclick="showView('new-wtn')"><span class="icon">➕</span><span class="label">New WTN</span></div>
+    <div class="qa-btn" onclick="showView('companies')"><span class="icon">🏢</span><span class="label">Companies</span></div>
+    <div class="qa-btn" onclick="showView('stock')"><span class="icon">📦</span><span class="label">Stock</span></div>
+    <div class="qa-btn" onclick="showView('archive')"><span class="icon">📄</span><span class="label">Archive</span></div>
+  </div>
+  <div class="section-title">Recent WTNs</div>
+  <div id="dash-recent"></div>
+</div>
+
+<!-- NEW WTN -->
+<div class="view" id="view-new-wtn">
+  <div class="card">
+    <div class="stepper">
+      <span class="step active" id="st1"><span class="num">1</span>Company</span>
+      <span class="step" id="st2"><span class="num">2</span>Details</span>
+      <span class="step" id="st3"><span class="num">3</span>Materials</span>
+      <span class="step" id="st4"><span class="num">4</span>Sign</span>
+    </div>
+
+    <div id="step1-box">
+      <label>Direction</label>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-primary" style="flex:1" id="btn-in" onclick="setDir('IN')">Inbound</button>
+        <button class="btn btn-secondary" style="flex:1" id="btn-out" onclick="setDir('OUT')">Outbound</button>
+      </div>
+      <div class="grid">
+        <div class="full"><label>Company</label><select id="wtn-company" onchange="companyChange()"></select></div>
+        <div class="full"><label>Contact Person</label><input id="wtn-contact" placeholder="Name"></div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" onclick="showStep(2)">Next: Vehicle & Details →</button>
+    </div>
+
+    <div id="step2-box" style="display:none">
+      <div class="grid">
+        <div><label>Vehicle</label><select id="wtn-vehicle"><option value="">-- Select --</option></select><button class="btn btn-sm btn-secondary" style="margin-top:6px" onclick="openModal('modal-vehicle')">+ Add Vehicle</button></div>
+        <div><label>Date</label><input id="wtn-date" type="date"></div>
+        <div><label>Time</label><input id="wtn-time" type="time"></div>
+        <div><label>Contained</label><select id="wtn-contained"><option>Small bales</option><option>Mill-size bales</option><option>Loose</option><option>Sacks</option><option>Other</option></select></div>
+        <div class="full"><label>Collection Point</label><input id="wtn-point"></div>
+        <div><label>Broker</label><input id="wtn-broker"></div>
+        <div><label>Broker Reg</label><input id="wtn-broker-reg"></div>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn btn-ghost" onclick="showStep(1)">← Back</button>
+        <button class="btn btn-primary btn-block btn-lg" onclick="showStep(3)">Next: Materials →</button>
+      </div>
+    </div>
+
+    <div id="step3-box" style="display:none">
+      <div id="wtn-materials"></div>
+      <button class="btn btn-secondary btn-block" onclick="addMaterial()" style="margin:10px 0">+ Add Material</button>
+      <div class="card" style="background:var(--g3);border-color:var(--g)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:700">Total Quantity</span>
+          <span style="font-size:22px;font-weight:800;color:var(--g)"><span id="wtn-total">0</span> kg</span>
+        </div>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn btn-ghost" onclick="showStep(2)">← Back</button>
+        <button class="btn btn-primary btn-block btn-lg" onclick="showStep(4)">Next: Signatures →</button>
+      </div>
+    </div>
+
+    <div id="step4-box" style="display:none">
+      <div class="grid">
+        <div>
+          <label id="sig1-label">Customer Signature</label>
+          <div id="saved-sig1-box" style="margin-bottom:8px;display:none"><button class="btn btn-sm btn-secondary" onclick="useSavedSig1()">✓ Use Saved Signature</button></div>
+          <div class="sig-wrap"><canvas id="sig1" class="sig-canvas"></canvas><div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig1')">Clear</button></div></div>
+          <input id="sig1-name" placeholder="Printed name">
+        </div>
+        <div>
+          <label>Recyclables UK Signature</label>
+          <div id="saved-sig2-box" style="margin-bottom:8px;display:none"><button class="btn btn-sm btn-secondary" onclick="useSavedSig2()">✓ Use Saved Signature</button></div>
+          <div class="sig-wrap"><canvas id="sig2" class="sig-canvas"></canvas><div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig2')">Clear</button></div></div>
+          <input id="sig2-name" placeholder="Printed name">
+        </div>
+      </div>
+      <div class="row" style="margin-top:20px">
+        <button class="btn btn-ghost" onclick="showStep(3)">← Back</button>
+        <button class="btn btn-primary btn-block btn-lg" onclick="reviewWTN()">Review WTN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW -->
+<div class="view" id="view-review">
+  <div class="card no-print">
+    <h2>Review WTN</h2>
+    <button class="btn btn-primary btn-block btn-lg" onclick="saveWTN()">✓ Save WTN</button>
+    <div class="row" style="margin-top:8px">
+      <button class="btn btn-secondary" onclick="showStep(4);showView('new-wtn')">← Edit</button>
+      <button class="btn btn-ghost" onclick="showView('dashboard')">Cancel</button>
+    </div>
+  </div>
+  <div class="print-view" id="print-view"></div>
+</div>
+
+<!-- ARCHIVE -->
+<div class="view" id="view-archive">
+  <div class="card no-print">
+    <div class="search-wrap"><input id="archive-search" placeholder="Search..." oninput="renderArchive()"></div>
+    <div class="row">
+      <select id="archive-dir" onchange="renderArchive()" style="flex:1"><option value="">All</option><option value="IN">Inbound</option><option value="OUT">Outbound</option></select>
+      <input id="archive-date" type="date" onchange="renderArchive()" style="flex:1">
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+    </div>
+  </div>
+  <div id="archive-list"></div>
+</div>
+
+<!-- COMPANIES -->
+<div class="view" id="view-companies">
+  <div class="card no-print">
+    <div class="search-wrap"><input id="company-search" placeholder="Search companies..." oninput="renderCompanies()"></div>
+    <button class="btn btn-primary btn-block" onclick="openCompanyModal()">+ Add Company</button>
+  </div>
+  <div id="companies-list"></div>
+</div>
+
+<!-- COMPANY DETAIL -->
+<div class="view" id="view-company-detail">
+  <div class="card no-print"><button class="btn btn-ghost btn-sm" onclick="showView('companies')">← Back to Companies</button></div>
+  <div id="company-detail-box"></div>
+</div>
+
+<!-- STOCK -->
+<div class="view" id="view-stock">
+  <div id="stock-list"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="view" id="view-settings">
+  <div class="card">
+    <h2>Recyclables UK Details</h2>
+    <div class="grid">
+      <div class="full"><label>Company Name</label><input id="set-name" value="Recyclables UK"></div>
+      <div class="full"><label>Representative</label><input id="set-rep" value="Ian Brown"></div>
+      <div class="full"><label>Address</label><textarea id="set-address" rows="3">Unit B1, Morston Quays, Stephenson Street, Wallsend, NE28 6UE</textarea></div>
+      <div><label>Carrier Reg</label><input id="set-reg" value="CBDU609852"></div>
+      <div><label>Phone</label><input id="set-phone" value="07526201579"></div>
+      <div class="full"><label>Email</label><input id="set-email" value="Ian@recyclablesuk.co.uk"></div>
+    </div>
+    <div style="margin-top:14px">
+      <label>Signature</label>
+      <div class="sig-wrap"><canvas id="sig-settings" class="sig-canvas"></canvas><div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig-settings')">Clear</button></div></div>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:16px" onclick="saveSettings()">Save Settings</button>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <button class="btn btn-danger btn-block" onclick="exportData()">📤 Export Data</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-danger btn-block" onclick="if(confirm('DELETE ALL DATA?')){localStorage.clear();location.reload()}">🗑 Delete All Data</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Vehicle Modal -->
+<div class="modal" id="modal-vehicle">
+  <div class="modal-back" onclick="closeModal('modal-vehicle')"></div>
+  <div class="modal-box">
+    <div class="modal-header"><h3>Add Vehicle</h3><button class="modal-close" onclick="closeModal('modal-vehicle')">×</button></div>
+    <label>Registration</label><input id="new-vehicle-reg" style="text-transform:uppercase">
+    <label>Notes</label><input id="new-vehicle-notes">
+    <button class="btn btn-primary btn-block" style="margin-top:14px" onclick="addVehicle()">Add Vehicle</button>
+  </div>
+</div>
+
+<!-- Company Modal -->
+<div class="modal" id="modal-company">
+  <div class="modal-back" onclick="closeModal('modal-company')"></div>
+  <div class="modal-box">
+    <div class="modal-header"><h3 id="co-modal-title">Add Company</h3><button class="modal-close" onclick="closeModal('modal-company')">×</button></div>
+    <input type="hidden" id="co-modal-id">
+    <div class="grid">
+      <div class="full"><label>Name *</label><input id="co-name"></div>
+      <div><label>Contact</label><input id="co-contact"></div>
+      <div><label>Mobile</label><input id="co-mobile" type="tel"></div>
+      <div class="full"><label>Email</label><input id="co-email" type="email"></div>
+      <div><label>Preferred</label><select id="co-pref"><option>WhatsApp</option><option>Email</option><option>Phone</option></select></div>
+      <div class="full"><label>Address</label><textarea id="co-address" rows="2"></textarea></div>
+      <div><label>Postcode</label><input id="co-postcode"></div>
+      <div><label>SIC</label><input id="co-sic"></div>
+      <div class="full"><label>Notes</label><textarea id="co-notes" rows="2"></textarea></div>
+    </div>
+    <div style="margin-top:14px">
+      <label>Signature</label>
+      <div class="sig-wrap"><canvas id="sig-company" class="sig-canvas"></canvas><div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig-company')">Clear</button></div></div>
+    </div>
+    <button class="btn btn-primary btn-block" style="margin-top:14px" onclick="saveCompany()">Save Company</button>
+  </div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+var MATS = {
+  card:{name:"Cardboard packaging",code:"15 01 01",desc:"Paper and cardboard packaging"},
+  ldpe:{name:"LDPE packaging",code:"15 01 02",desc:"Plastic packaging (LDPE film/shrink wrap)"},
+  plastic19:{name:"Processed plastic from mechanical treatment",code:"19 12 04",desc:"Plastic and rubber from mechanical treatment of waste"},
+  pet:{name:"PET packaging",code:"15 01 01 (PET)",desc:"PET bottles and packaging"},
+  wood:{name:"Wood waste",code:"17 02 01",desc:"Wood from construction/demolition"},
+  metal:{name:"Metal packaging",code:"15 01 03",desc:"Steel/aluminium cans and packaging"}
+};
+
+var DEFAULT_COMPANIES = [
+  {id:"c1",name:"Pallet Supplies Limited",contact:"",mobile:"",email:"",pref:"WhatsApp",address:"Bay 3, Pallion Shipyard, Pallion New Road, Sunderland",postcode:"SR4 6LL",sic:"",vehicles:[],signature:"",notes:""},
+  {id:"c2",name:"Youngs Quality Food Ltd",contact:"",mobile:"",email:"",pref:"WhatsApp",address:"Rivergreen Industrial Estate, Unit 6A Eastway, Sunderland",postcode:"SR4 6AD",sic:"",vehicles:[],signature:"",notes:""},
+  {id:"c3",name:"International Cookware",contact:"",mobile:"",email:"",pref:"Email",address:"Unit 1a Hall Dene Way, Seaham",postcode:"SR7 0PU",sic:"",vehicles:[],signature:"",notes:""}
+];
+
+var DEFAULT_SETTINGS = {
+  name:"Recyclables UK",rep:"Ian Brown",address:"Unit B1, Morston Quays, Stephenson Street, Wallsend, NE28 6UE",
+  reg:"CBDU609852",phone:"07526201579",email:"Ian@recyclablesuk.co.uk",signature:""
+};
+
+function db(key,val){
+  if(val===undefined) return JSON.parse(localStorage.getItem("ruk3_"+key)||"null");
+  localStorage.setItem("ruk3_"+key,JSON.stringify(val));
+}
+
+function initDB(){
+  if(!db("companies")) db("companies",DEFAULT_COMPANIES);
+  if(!db("wtns")) db("wtns",[]);
+  if(!db("settings")) db("settings",DEFAULT_SETTINGS);
+  var old = JSON.parse(localStorage.getItem("ruk_wtn")||"[]");
+  if(old.length && !db("migrated")){
+    var existing = db("wtns");
+    var converted = [];
+    for(var i=0;i<old.length;i++){
+      var o = old[i];
+      var cid = "c1";
+      for(var j=0;j<DEFAULT_COMPANIES.length;j++){if(DEFAULT_COMPANIES[j].name===o.company){cid=DEFAULT_COMPANIES[j].id;break}}
+      var mats = [];
+      if(o.materials){for(var k=0;k<o.materials.length;k++){var m=o.materials[k];mats.push({key:m.key,name:m.name,code:m.code,desc:m.description,quantity:parseFloat(m.quantity)||0});}}
+      converted.push({id:"old_"+i,number:o.number,direction:o.direction,date:o.date,time:o.time,companyId:cid,vehicle:o.vehicle||"",contained:o.contained||"Small bales",materials:mats,totalKg:parseFloat(o.totalKg)||0,transferPoint:o.transferPoint||"",broker:o.broker||"",brokerReg:o.brokerReg||"",sig1Name:o.sig1Name||"",sig2Name:o.sig2Name||"",sig1:"",sig2:"",status:"saved",createdAt:o.saved||new Date().toISOString()});
+    }
+    db("wtns",converted.concat(existing));
+    db("migrated",true);
+  }
+}
+
+/* ===== NAVIGATION - SIMPLEST POSSIBLE ===== */
+var ALL_VIEWS = ["dashboard","new-wtn","archive","companies","stock","settings","company-detail","review"];
+
+function showView(name){
+  for(var i=0;i<ALL_VIEWS.length;i++){
+    var el = document.getElementById("view-"+ALL_VIEWS[i]);
+    if(el) el.style.display = "none";
+  }
+  var target = document.getElementById("view-"+name);
+  if(target) target.style.display = "block";
+
+  var tabs = document.getElementsByClassName("tab");
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
+  var map = {dashboard:0,"new-wtn":1,archive:2,companies:3,stock:4,settings:5};
+  if(map[name]!==undefined && tabs[map[name]]) tabs[map[name]].classList.add("active");
+
+  window.scrollTo(0,0);
+  if(name==="dashboard") renderDashboard();
+  if(name==="archive") renderArchive();
+  if(name==="companies") renderCompanies();
+  if(name==="stock") renderStock();
+  if(name==="settings") loadSettings();
+}
+
+/* ===== DASHBOARD ===== */
+function renderDashboard(){
+  var wtns = db("wtns")||[];
+  var today = new Date().toISOString().slice(0,10);
+  var inb=0, out=0;
+  for(var i=0;i<wtns.length;i++){
+    var w = wtns[i];
+    if(w.date===today){if(w.direction==="IN") inb += w.totalKg||0; else out += w.totalKg||0;}
+  }
+  document.getElementById("dash-inbound").textContent = inb.toLocaleString();
+  document.getElementById("dash-outbound").textContent = out.toLocaleString();
+  var recent = wtns.slice().sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt)}).slice(0,5);
+  var el = document.getElementById("dash-recent");
+  if(!recent.length){el.innerHTML='<div class="empty"><div class="icon">📄</div><h3>No WTNs yet</h3><p>Create your first WTN to see it here.</p></div>';return;}
+  var html = "";
+  for(var i=0;i<recent.length;i++){
+    var w = recent[i];
+    html += '<div class="list-item" onclick="viewWTN(''+w.id+'')"><div class="title">'+w.number+'</div><div class="meta">'+w.date+' · '+(w.direction==="IN"?"Inbound":"Outbound")+' · '+w.totalKg+'kg · '+companyName(w.companyId)+'</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+/* ===== WTN CREATION ===== */
+var wtnDir = "IN";
+var wtnStep = 1;
+var reviewData = null;
+
+function setDir(dir){
+  wtnDir = dir;
+  document.getElementById("btn-in").className = dir==="IN"?"btn btn-primary":"btn btn-secondary";
+  document.getElementById("btn-out").className = dir==="OUT"?"btn btn-primary":"btn btn-secondary";
+  populateCompanies();
+  document.getElementById("sig1-label").textContent = dir==="IN"?"Customer Signature":"Recyclables UK Signature";
+}
+
+function populateCompanies(){
+  var companies = db("companies")||[];
+  var sel = document.getElementById("wtn-company");
+  var opts = "";
+  for(var i=0;i<companies.length;i++) opts += '<option value="'+companies[i].id+'">'+companies[i].name+'</option>';
+  sel.innerHTML = opts;
+  companyChange();
+}
+
+function companyChange(){
+  var companies = db("companies")||[];
+  var cid = document.getElementById("wtn-company").value;
+  var c = null;
+  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
+  if(!c) return;
+  document.getElementById("wtn-contact").value = c.contact||"";
+  var vsel = document.getElementById("wtn-vehicle");
+  var vopts = '<option value="">-- Select --</option>';
+  if(c.vehicles) for(var i=0;i<c.vehicles.length;i++) vopts += '<option value="'+c.vehicles[i].reg+'">'+c.vehicles[i].reg+'</option>';
+  vsel.innerHTML = vopts;
+  var tp = wtnDir==="IN" ? (c.address+(c.postcode?", "+c.postcode:"")) : (db("settings")?db("settings").address||"":"");
+  document.getElementById("wtn-point").value = tp;
+  document.getElementById("saved-sig1-box").style.display = c.signature?"block":"none";
+}
+
+function showStep(n){
+  wtnStep = n;
+  for(var i=1;i<=4;i++){
+    document.getElementById("step"+i+"-box").style.display = i===n?"block":"none";
+    var st = document.getElementById("st"+i);
+    st.classList.remove("active","done");
+    if(i<n) st.classList.add("done");
+    if(i===n) st.classList.add("active");
+  }
+  if(n===4){
+    var rukSig = db("settings")?db("settings").signature:"";
+    document.getElementById("saved-sig2-box").style.display = rukSig?"block":"none";
+    document.getElementById("sig2-name").value = db("settings")?db("settings").rep||"Ian Brown":"Ian Brown";
+    setTimeout(function(){initSig("sig1");initSig("sig2");},50);
+  }
+}
+
+function addMaterial(key,qty){
+  if(!key) key="card"; if(qty===undefined) qty="";
+  var id = "mat_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
+  var div = document.createElement("div");
+  div.className = "mat-row";
+  div.id = id;
+  var opts = "";
+  for(var k in MATS) opts += '<option value="'+k+'" '+(k===key?"selected":"")+'>'+MATS[k].name+'</option>';
+  div.innerHTML = '<div class="mat-name"><label>Material</label><select class="mat-key" onchange="updateCode(''+id+'')">'+opts+'</select></div><div><label>LoW/EWC</label><input class="mat-code" readonly></div><div><label>Weight (kg)</label><input class="mat-qty" type="number" min="0" step="0.1" value="'+qty+'" oninput="updateTotal()"></div><button class="remove" onclick="document.getElementById(''+id+'').remove();updateTotal()">×</button>';
+  document.getElementById("wtn-materials").appendChild(div);
+  updateCode(id);
+  updateTotal();
+}
+
+function updateCode(id){
+  var row = document.getElementById(id);
+  if(!row) return;
+  var key = row.querySelector(".mat-key").value;
+  row.querySelector(".mat-code").value = MATS[key]?MATS[key].code:"";
+}
+
+function updateTotal(){
+  var t=0;
+  var els = document.querySelectorAll(".mat-qty");
+  for(var i=0;i<els.length;i++) t += parseFloat(els[i].value)||0;
+  document.getElementById("wtn-total").textContent = t.toLocaleString();
+}
+
+function addVehicle(){
+  var reg = document.getElementById("new-vehicle-reg").value.trim().toUpperCase();
+  if(!reg){toast("Enter registration");return;}
+  var companies = db("companies");
+  var cid = document.getElementById("wtn-company").value;
+  var c = null;
+  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
+  if(c){c.vehicles = c.vehicles||[]; c.vehicles.push({reg:reg,notes:document.getElementById("new-vehicle-notes").value.trim()}); db("companies",companies);}
+  closeModal("modal-vehicle");
+  companyChange();
+  document.getElementById("wtn-vehicle").value = reg;
+  toast("Vehicle added");
+}
+
+function useSavedSig1(){
+  var companies = db("companies");
+  var cid = document.getElementById("wtn-company").value;
+  var c = null;
+  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
+  if(c&&c.signature){
+    var canvas = document.getElementById("sig1");
+    var ctx = canvas.getContext("2d");
+    var img = new Image();
+    img.onload = function(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width/2,canvas.height/2);};
+    img.src = c.signature;
+  }
+}
+
+function useSavedSig2(){
+  var sig = db("settings")?db("settings").signature:"";
+  if(sig){
+    var canvas = document.getElementById("sig2");
+    var ctx = canvas.getContext("2d");
+    var img = new Image();
+    img.onload = function(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width/2,canvas.height/2);};
+    img.src = sig;
+  }
+}
+
+function reviewWTN(){
+  var companies = db("companies");
+  var settings = db("settings");
+  var cid = document.getElementById("wtn-company").value;
+  var c = null;
+  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
+  var mats = [];
+  var rows = document.querySelectorAll(".mat-row");
+  for(var i=0;i<rows.length;i++){
+    var r = rows[i];
+    var k = r.querySelector(".mat-key").value;
+    var q = parseFloat(r.querySelector(".mat-qty").value)||0;
+    if(q>0) mats.push({key:k,name:MATS[k].name,code:MATS[k].code,desc:MATS[k].desc,quantity:q});
+  }
+  var total = 0;
+  for(var i=0;i<mats.length;i++) total += mats[i].quantity;
+  var date = document.getElementById("wtn-date").value;
+  var time = document.getElementById("wtn-time").value;
+  var vehicle = document.getElementById("wtn-vehicle").value;
+  var contained = document.getElementById("wtn-contained").value;
+  var point = document.getElementById("wtn-point").value;
+  var broker = document.getElementById("wtn-broker").value;
+  var brokerReg = document.getElementById("wtn-broker-reg").value;
+  var contact = document.getElementById("wtn-contact").value;
+  var sig1Name = document.getElementById("sig1-name").value;
+  var sig2Name = document.getElementById("sig2-name").value;
+
+  function slug(s){return (s||"PARTY").toUpperCase().replace(/[^A-Z0-9]+/g,"").slice(0,18)||"PARTY"}
+  var dkey = date.replace(/-/g,"");
+  var allWtns = db("wtns")||[];
+  var prefix = "RUK-"+wtnDir+"-"+slug(c.name)+"-"+dkey+"-";
+  var maxNum = 0;
+  for(var i=0;i<allWtns.length;i++){
+    if(allWtns[i].number && allWtns[i].number.indexOf(prefix)===0){
+      var n = parseInt(allWtns[i].number.split("-").pop())||0;
+      if(n>maxNum) maxNum=n;
+    }
+  }
+  var number = prefix + String(maxNum+1).padStart(5,"0");
+
+  reviewData = {
+    id:"wtn_"+Date.now(),number:number,direction:wtnDir,date:date,time:time,
+    companyId:c.id,vehicle:vehicle,contained:contained,materials:mats,totalKg:total,
+    transferPoint:point,broker:broker,brokerReg:brokerReg,contact:contact,
+    sig1Name:sig1Name,sig2Name:sig2Name,
+    sig1:getSigData("sig1"),sig2:getSigData("sig2"),
+    status:"draft",createdAt:new Date().toISOString()
+  };
+
+  var partyLabel = wtnDir==="IN"?"Transferor / Supplier":"Recyclables UK / Transferor";
+  var rukLabel = wtnDir==="IN"?"Transferee / Recyclables UK":"Transferee / Customer";
+  var matRows = "";
+  for(var i=0;i<mats.length;i++){var m=mats[i];matRows+='<tr><td>'+m.name+'</td><td>'+m.code+'</td><td>'+m.desc+'</td><td style="text-align:right;font-weight:700">'+m.quantity+' kg</td></tr>';}
+
+  document.getElementById("print-view").innerHTML = 
+    '<h1>Recyclables UK - Waste Transfer Note</h1>'+
+    '<div class="print-meta">WTN: <b>'+number+'</b> | Date: '+date+' | Time: '+time+'</div>'+
+    '<div class="print-section"><h3>Transfer Details</h3><div class="print-grid">'+
+    '<div><div class="print-label">Direction</div><div class="print-val">'+(wtnDir==="IN"?"Inbound":"Outbound")+'</div></div>'+
+    '<div><div class="print-label">Vehicle</div><div class="print-val">'+(vehicle||"-")+'</div></div>'+
+    '<div><div class="print-label">Contained</div><div class="print-val">'+contained+'</div></div>'+
+    '<div><div class="print-label">Point</div><div class="print-val">'+(point||"-")+'</div></div>'+
+    '</div></div>'+
+    '<div class="print-section"><h3>Materials</h3><table class="material-table"><tr><th>Material</th><th>LoW/EWC</th><th>Description</th><th style="text-align:right">Qty</th></tr>'+matRows+'<tr style="background:#f5f5f5;font-weight:800"><td colspan="3">TOTAL</td><td style="text-align:right">'+total.toLocaleString()+' kg</td></tr></table></div>'+
+    '<div class="print-section"><h3>'+partyLabel+'</h3><div class="print-grid">'+
+    '<div><div class="print-label">Company</div><div class="print-val">'+c.name+'</div></div>'+
+    '<div><div class="print-label">Contact</div><div class="print-val">'+(contact||"-")+'</div></div>'+
+    '<div class="full"><div class="print-label">Address</div><div class="print-val">'+(c.address||"")+(c.postcode?", "+c.postcode:"")+'</div></div>'+
+    '</div><div style="margin-top:10px"><div class="print-label">Signature</div>'+(reviewData.sig1?'<img class="sig-img" src="'+reviewData.sig1+'">':'<span style="color:#999">No signature</span>')+'<div style="margin-top:4px;font-size:13px">'+(sig1Name||"")+'</div></div></div>'+
+    '<div class="print-section"><h3>'+rukLabel+'</h3><div class="print-grid">'+
+    '<div><div class="print-label">Company</div><div class="print-val">'+(settings?settings.name||"Recyclables UK":"Recyclables UK")+'</div></div>'+
+    '<div><div class="print-label">Rep</div><div class="print-val">'+(settings?settings.rep||"Ian Brown":"Ian Brown")+'</div></div>'+
+    '<div class="full"><div class="print-label">Address</div><div class="print-val">'+(settings?settings.address||"":"")+'</div></div>'+
+    '<div><div class="print-label">Reg</div><div class="print-val">'+(settings?settings.reg||"-":"-")+'</div></div>'+
+    '</div><div style="margin-top:10px"><div class="print-label">Signature</div>'+(reviewData.sig2?'<img class="sig-img" src="'+reviewData.sig2+'">':'<span style="color:#999">No signature</span>')+'<div style="margin-top:4px;font-size:13px">'+(sig2Name||"")+'</div></div></div>';
+
+  showView("review");
+}
+
+function saveWTN(){
+  if(!reviewData) return;
+  reviewData.status = "saved";
+  var wtns = db("wtns")||[];
+  wtns.push(reviewData);
+  db("wtns",wtns);
+  toast("WTN Saved: "+reviewData.number);
+  setTimeout(function(){resetWTN(); showView("dashboard");},800);
+}
+
+function resetWTN(){
+  wtnDir = "IN"; wtnStep = 1;
+  document.getElementById("wtn-date").value = new Date().toISOString().slice(0,10);
+  document.getElementById("wtn-time").value = new Date().toTimeString().slice(0,5);
+  document.getElementById("wtn-broker").value = "";
+  document.getElementById("wtn-broker-reg").value = "";
+  document.getElementById("wtn-contact").value = "";
+  document.getElementById("sig1-name").value = "";
+  document.getElementById("sig2-name").value = db("settings")?db("settings").rep||"Ian Brown":"Ian Brown";
+  document.getElementById("wtn-materials").innerHTML = "";
+  addMaterial("card");
+  setDir("IN");
+  showStep(1);
+}
+
+function viewWTN(id){
+  var wtns = db("wtns")||[];
+  var w = null;
+  for(var i=0;i<wtns.length;i++) if(wtns[i].id===id) w=wtns[i];
+  if(!w) return;
+  var companies = db("companies");
+  var settings = db("settings");
+  var c = null;
+  for(var i=0;i<companies.length;i++) if(companies[i].id===w.companyId) c=companies[i];
+  if(!c) c={};
+  var partyLabel = w.direction==="IN"?"Transferor / Supplier":"Recyclables UK / Transferor";
+  var rukLabel = w.direction==="IN"?"Transferee / Recyclables UK":"Transferee / Customer";
+  var matRows = "";
+  if(w.materials) for(var i=0;i<w.materials.length;i++){var m=w.materials[i];matRows+='<tr><td>'+m.name+'</td><td>'+m.code+'</td><td>'+m.desc+'</td><td style="text-align:right;font-weight:700">'+m.quantity+' kg</td></tr>';}
+  document.getElementById("print-view").innerHTML = 
+    '<div class="no-print" style="margin-bottom:16px"><button class="btn btn-ghost btn-sm" onclick="showView('archive')">&larr; Back</button><div class="row" style="margin-top:10px"><button class="btn btn-secondary" onclick="window.print()">Print / PDF</button><button class="btn btn-secondary" onclick="shareWTN(''+w.id+'')">Share</button><button class="btn btn-danger" onclick="deleteWTN(''+w.id+'')">Delete</button></div></div>'+
+    '<h1>Recyclables UK - Waste Transfer Note</h1>'+
+    '<div class="print-meta">WTN: <b>'+w.number+'</b> | Date: '+w.date+' | Time: '+(w.time||"-")+'</div>'+
+    '<div class="print-section"><h3>Transfer Details</h3><div class="print-grid">'+
+    '<div><div class="print-label">Direction</div><div class="print-val">'+(w.direction==="IN"?"Inbound":"Outbound")+'</div></div>'+
+    '<div><div class="print-label">Vehicle</div><div class="print-val">'+(w.vehicle||"-")+'</div></div>'+
+    '<div><div class="print-label">Contained</div><div class="print-val">'+(w.contained||"-")+'</div></div>'+
+    '<div><div class="print-label">Point</div><div class="print-val">'+(w.transferPoint||"-")+'</div></div>'+
+    '</div></div>'+
+    '<div class="print-section"><h3>Materials</h3><table class="material-table"><tr><th>Material</th><th>LoW/EWC</th><th>Description</th><th style="text-align:right">Qty</th></tr>'+matRows+'<tr style="background:#f5f5f5;font-weight:800"><td colspan="3">TOTAL</td><td style="text-align:right">'+(w.totalKg||0).toLocaleString()+' kg</td></tr></table></div>'+
+    '<div class="print-section"><h3>'+partyLabel+'</h3><div class="print-grid">'+
+    '<div><div class="print-label">Company</div><div class="print-val">'+(c.name||"-")+'</div></div>'+
+    '<div><div class="print-label">Contact</div><div class="print-val">'+(w.contact||c.contact||"-")+'</div></div>'+
+    '<div class="full"><div class="print-label">Address</div><div class="print-val">'+(c.address||"")+(c.postcode?", "+c.postcode:"")+'</div></div>'+
+    '</div><div style="margin-top:10px"><div class="print-label">Signature</div>'+(w.sig1?'<img class="sig-img" src="'+w.sig1+'">':'<span style="color:#999">No signature</span>')+'<div style="margin-top:4px;font-size:13px">'+(w.sig1Name||"")+'</div></div></div>'+
+    '<div class="print-section"><h3>'+rukLabel+'</h3><div class="print-grid">'+
+    '<div><div class="print-label">Company</div><div class="print-val">'+(settings?settings.name||"Recyclables UK":"Recyclables UK")+'</div></div>'+
+    '<div><div class="print-label">Rep</div><div class="print-val">'+(settings?settings.rep||"Ian Brown":"Ian Brown")+'</div></div>'+
+    '<div class="full"><div class="print-label">Address</div><div class="print-val">'+(settings?settings.address||"":"")+'</div></div>'+
+    '<div><div class="print-label">Reg</div><div class="print-val">'+(settings?settings.reg||"-":"-")+'</div></div>'+
+    '</div><div style="margin-top:10px"><div class="print-label">Signature</div>'+(w.sig2?'<img class="sig-img" src="'+w.sig2+'">':'<span style="color:#999">No signature</span>')+'<div style="margin-top:4px;font-size:13px">'+(w.sig2Name||"")+'</div></div></div>';
+  showView("review");
+}
+
+function deleteWTN(id){
+  if(!confirm("Delete this WTN?")) return;
+  var wtns = db("wtns")||[];
+  var filtered = [];
+  for(var i=0;i<wtns.length;i++) if(wtns[i].id!==id) filtered.push(wtns[i]);
+  db("wtns",filtered);
+  toast("WTN deleted");
+  showView("archive");
+}
+
+function shareWTN(id){
+  var wtns = db("wtns")||[];
+  var w = null;
+  for(var i=0;i<wtns.length;i++) if(wtns[i].id===id) w=wtns[i];
+  if(!w) return;
+  var text = "WTN "+w.number+" - "+(w.direction==="IN"?"Inbound":"Outbound")+" - "+w.totalKg+"kg";
+  if(navigator.share){navigator.share({title:w.number,text:text}).catch(function(){});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(text); toast("Copied");}
+  else{toast("Save as PDF and share");}
+}
+
+/* ===== ARCHIVE ===== */
+function renderArchive(){
+  var search = (document.getElementById("archive-search").value||"").toLowerCase();
+  var dirFilter = document.getElementById("archive-dir").value;
+  var dateFilter = document.getElementById("archive-date").value;
+  var companies = db("companies")||[];
+  var wtns = db("wtns")||[];
+  var filtered = [];
+  for(var i=0;i<wtns.length;i++){
+    var w = wtns[i];
+    if(dirFilter && w.direction!==dirFilter) continue;
+    if(dateFilter && w.date!==dateFilter) continue;
+    if(search){
+      var c = null;
+      for(var j=0;j<companies.length;j++) if(companies[j].id===w.companyId) c=companies[j];
+      var hay = (w.number+" "+(c?c.name:"")+" "+(w.vehicle||"")+" ");
+      if(w.materials) for(var k=0;k<w.materials.length;k++) hay+=w.materials[k].name+" ";
+      if(hay.toLowerCase().indexOf(search)===-1) continue;
+    }
+    filtered.push(w);
+  }
+  filtered.sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt)});
+  var el = document.getElementById("archive-list");
+  if(!filtered.length){el.innerHTML='<div class="empty"><div class="icon">📄</div><h3>No WTNs found</h3></div>';return;}
+  var html = "";
+  for(var i=0;i<filtered.length;i++){
+    var w = filtered[i];
+    var c = null;
+    for(var j=0;j<companies.length;j++) if(companies[j].id===w.companyId) c=companies[j];
+    html += '<div class="list-item"><div onclick="viewWTN(''+w.id+'')"><div class="title">'+w.number+'</div><div class="meta">'+w.date+' · '+(w.direction==="IN"?"Inbound":"Outbound")+' · '+w.totalKg+'kg · '+(c?c.name:"Unknown")+'</div></div><div class="actions no-print"><button class="btn btn-sm btn-secondary" onclick="dupWTN(''+w.id+'')">Duplicate</button><button class="btn btn-sm btn-danger" onclick="deleteWTN(''+w.id+'')">Delete</button></div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function clearFilters(){
+  document.getElementById("archive-search").value="";
+  document.getElementById("archive-dir").value="";
+  document.getElementById("archive-date").value="";
+  renderArchive();
+}
+
+function dupWTN(id){
+  var wtns = db("wtns")||[];
+  var w = null;
+  for(var i=0;i<wtns.length;i++) if(wtns[i].id===id) w=wtns[i];
+  if(!w) return;
+  var newW = JSON.parse(JSON.stringify(w));
+  newW.id = "wtn_"+Date.now();
+  newW.date = new Date().toISOString().slice(0,10);
+  newW.time = new Date().toTimeString().slice(0,5);
+  newW.status = "draft";
+  newW.createdAt = new Date().toISOString();
+  var companies = db("companies");
+  var c = null;
+  for(var i=0;i<companies.length;i++) if(companies[i].id===w.companyId) c=companies[i];
+  function slug(s){return (s||"PARTY").toUpperCase().replace(/[^A-Z0-9]+/g,"").slice(0,18)||"PARTY"}
+  var dkey = newW.date.replace(/-/g,"");
+  var allWtns = db("wtns")||[];
+  var prefix = "RUK-"+newW.direction+"-"+slug(c?c.name:"PARTY")+"-"+dkey+"-";
+  var maxNum = 0;
+  for(var i=0;i<allWtns.length;i++){
+    if(allWtns[i].number && allWtns[i].number.indexOf(prefix)===0){
+      var n = parseInt(allWtns[i].number.split("-").pop())||0;
+      if(n>maxNum) maxNum=n;
+    }
+  }
+  newW.number = prefix + String(maxNum+1).padStart(5,"0");
+  var all = db("wtns");
+  all.push(newW);
+  db("wtns",all);
+  toast("Duplicated: "+newW.number);
+  renderArchive();
+}
+
+/* ===== COMPANIES ===== */
+function renderCompanies(){
+  var search = (document.getElementById("company-search").value||"").toLowerCase();
+  var companies = db("companies")||[];
+  if(search){
+    var filtered = [];
+    for(var i=0;i<companies.length;i++){
+      if(companies[i].name.toLowerCase().indexOf(search)!==-1 || (companies[i].postcode||"").toLowerCase().indexOf(search)!==-1) filtered.push(companies[i]);
+    }
+    companies = filtered;
+  }
+  var el = document.getElementById("companies-list");
+  if(!companies.length){el.innerHTML='<div class="empty"><div class="icon">🏢</div><h3>No companies</h3></div>';return;}
+  var html = "";
+  for(var i=0;i<companies.length;i++){
+    var c = companies[i];
+    html += '<div class="list-item" onclick="showCompanyDetail(''+c.id+'')"><div class="title">'+c.name+'</div><div class="meta">'+(c.contact||"No contact")+' · '+(c.postcode||"No postcode")+' · '+(c.vehicles||[]).length+' vehicles</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function openCompanyModal(id){
+  document.getElementById("co-modal-id").value = id||"";
+  document.getElementById("co-modal-title").textContent = id?"Edit Company":"Add Company";
+  if(id){
+    var companies = db("companies")||[];
+    var c = null;
+    for(var i=0;i<companies.length;i++) if(companies[i].id===id) c=companies[i];
+    if(c){
+      document.getElementById("co-name").value = c.name;
+      document.getElementById("co-contact").value = c.contact||"";
+      document.getElementById("co-mobile").value = c.mobile||"";
+      document.getElementById("co-email").value = c.email||"";
+      document.getElementById("co-pref").value = c.pref||"WhatsApp";
+      document.getElementById("co-address").value = c.address||"";
+      document.getElementById("co-postcode").value = c.postcode||"";
+      document.getElementById("co-sic").value = c.sic||"";
+      document.getElementById("co-notes").value = c.notes||"";
+      setTimeout(function(){if(c.signature) loadSigToCanvas("sig-company",c.signature); else clearSig("sig-company");},100);
+    }
+  } else {
+    var ids = ["co-name","co-contact","co-mobile","co-email","co-address","co-postcode","co-sic","co-notes"];
+    for(var i=0;i<ids.length;i++) document.getElementById(ids[i]).value="";
+    document.getElementById("co-pref").value="WhatsApp";
+    clearSig("sig-company");
+  }
+  openModal("modal-company");
+}
+
+function saveCompany(){
+  var id = document.getElementById("co-modal-id").value;
+  var name = document.getElementById("co-name").value.trim();
+  if(!name){toast("Company name required");return;}
+  var companies = db("companies")||[];
+  var existing = null;
+  if(id){for(var i=0;i<companies.length;i++) if(companies[i].id===id) existing=companies[i];}
+  var data = {
+    id: id || "c_"+Date.now(),
+    name:name, contact:document.getElementById("co-contact").value.trim(),
+    mobile:document.getElementById("co-mobile").value.trim(),
+    email:document.getElementById("co-email").value.trim(),
+    pref:document.getElementById("co-pref").value,
+    address:document.getElementById("co-address").value.trim(),
+    postcode:document.getElementById("co-postcode").value.trim().toUpperCase(),
+    sic:document.getElementById("co-sic").value.trim(),
+    notes:document.getElementById("co-notes").value.trim(),
+    vehicles: existing?existing.vehicles||[]:[],
+    signature: getSigData("sig-company")|| (existing?existing.signature:"")
+  };
+  if(id){
+    var idx = -1;
+    for(var i=0;i<companies.length;i++) if(companies[i].id===id){idx=i;break}
+    if(idx>=0){
+      data.vehicles = companies[idx].vehicles||[];
+      if(!data.signature) data.signature = companies[idx].signature;
+      companies[idx] = data;
+    }
+  } else {
+    companies.push(data);
+  }
+  db("companies",companies);
+  closeModal("modal-company");
+  toast(id?"Updated":"Added");
+  renderCompanies();
+}
+
+function showCompanyDetail(id){
+  var companies = db("companies")||[];
+  var c = null;
+  for(var i=0;i<companies.length;i++) if(companies[i].id===id) c=companies[i];
+  if(!c) return;
+  var vels = "";
+  if(c.vehicles && c.vehicles.length){for(var i=0;i<c.vehicles.length;i++) vels += '<span class="chip">'+c.vehicles[i].reg+' <button class="remove" onclick="removeVehicle(''+id+'',''+c.vehicles[i].reg+'')">×</button></span>';}
+  else {vels = '<span style="color:#999;font-size:13px">No vehicles</span>'}
+  var sigHtml = c.signature ? '<img src="'+c.signature+'" style="max-width:200px;max-height:80px;border:1px solid #ddd;padding:4px">' : '<span style="color:#999">No signature</span>';
+  var notesHtml = c.notes?'<div style="margin-top:14px"><label>Notes</label><div style="background:#f9f9f9;padding:10px;border-radius:8px;font-size:14px">'+c.notes+'</div></div>':'';
+  document.getElementById("company-detail-box").innerHTML = 
+    '<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h2 style="margin:0">'+c.name+'</h2><div class="no-print"><button class="btn btn-sm btn-secondary" onclick="openCompanyModal(''+c.id+'')">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteCompany(''+c.id+'')">Delete</button></div></div>'+
+    '<div class="grid"><div><label>Contact</label><input value="'+(c.contact||"-")+'" readonly></div><div><label>Mobile</label><input value="'+(c.mobile||"-")+'" readonly></div><div><label>Email</label><input value="'+(c.email||"-")+'" readonly></div><div><label>Preferred</label><input value="'+(c.pref||"-")+'" readonly></div><div class="full"><label>Address</label><textarea rows="2" readonly>'+(c.address||"")+(c.postcode?"
+"+c.postcode:"")+'</textarea></div><div><label>SIC</label><input value="'+(c.sic||"-")+'" readonly></div></div>'+
+    '<div style="margin-top:14px"><label>Vehicles</label><div>'+vels+'</div></div>'+
+    '<div style="margin-top:14px"><label>Signature</label><div>'+sigHtml+'</div></div>'+notesHtml+'</div>';
+  showView("company-detail");
+}
+
+function removeVehicle(cid,reg){
+  var companies = db("companies");
+  var c = null;
+  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
+  if(c){c.vehicles = (c.vehicles||[]).filter(function(v){return v.reg!==reg}); db("companies",companies);}
+  showCompanyDetail(cid);
+  toast("Removed");
+}
+
+function deleteCompany(id){
+  if(!confirm("Delete company?")) return;
+  var companies = db("companies");
+  var filtered = [];
+  for(var i=0;i<companies.length;i++) if(companies[i].id!==id) filtered.push(companies[i]);
+  db("companies",filtered);
+  toast("Deleted");
+  showView("companies");
+}
+
+/* ===== STOCK ===== */
+function renderStock(){
+  var wtns = db("wtns")||[];
+  var stock = {};
+  for(var k in MATS) stock[k]={name:MATS[k].name,code:MATS[k].code,desc:MATS[k].desc,total:0};
+  for(var i=0;i<wtns.length;i++){
+    var w = wtns[i];
+    if(w.status!=="saved" || !w.materials) continue;
+    for(var j=0;j<w.materials.length;j++){
+      var m = w.materials[j];
+      if(!stock[m.key]) stock[m.key]={name:m.name,code:m.code,desc:m.desc,total:0};
+      if(w.direction==="IN") stock[m.key].total += m.quantity||0;
+      else stock[m.key].total -= m.quantity||0;
+    }
+  }
+  var el = document.getElementById("stock-list");
+  var items = [];
+  for(var k in stock){if(stock[k].total!==0) items.push(stock[k])}
+  items.sort(function(a,b){return b.total-a.total});
+  if(!items.length){el.innerHTML='<div class="empty"><div class="icon">📦</div><h3>No stock data</h3></div>';return;}
+  var html = "";
+  for(var i=0;i<items.length;i++){
+    var s = items[i];
+    html += '<div class="stock-card"><div class="stock-icon">📦</div><div class="stock-info"><div class="stock-name">'+s.name+'</div><div class="stock-code">'+s.code+'</div></div><div class="stock-qty"><div class="stock-val">'+s.total.toLocaleString()+'</div><div class="stock-unit">kg</div></div></div>';
+  }
+  el.innerHTML = html;
+}
+
+/* ===== SETTINGS ===== */
+function loadSettings(){
+  var s = db("settings")||DEFAULT_SETTINGS;
+  document.getElementById("set-name").value = s.name||"";
+  document.getElementById("set-rep").value = s.rep||"";
+  document.getElementById("set-address").value = s.address||"";
+  document.getElementById("set-reg").value = s.reg||"";
+  document.getElementById("set-phone").value = s.phone||"";
+  document.getElementById("set-email").value = s.email||"";
+  setTimeout(function(){if(s.signature) loadSigToCanvas("sig-settings",s.signature);},100);
+}
+
+function saveSettings(){
+  var s = {
+    name:document.getElementById("set-name").value.trim(),
+    rep:document.getElementById("set-rep").value.trim(),
+    address:document.getElementById("set-address").value.trim(),
+    reg:document.getElementById("set-reg").value.trim(),
+    phone:document.getElementById("set-phone").value.trim(),
+    email:document.getElementById("set-email").value.trim(),
+    signature:getSigData("sig-settings")||(db("settings")?db("settings").signature:"")
+  };
+  db("settings",s);
+  toast("Saved");
+}
+
+function exportData(){
+  var data = {settings:db("settings"), companies:db("companies"), wtns:db("wtns"), exportedAt:new Date().toISOString()};
+  var blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = "RUK_Backup_"+new Date().toISOString().slice(0,10)+".json";
+  a.click(); URL.revokeObjectURL(url);
+  toast("Exported");
+}
+
+/* ===== SIGNATURES ===== */
+function initSig(id){
+  var c = document.getElementById(id);
+  if(!c) return;
+  var ctx = c.getContext("2d");
+  c.width = c.clientWidth*2; c.height = c.clientHeight*2;
+  ctx.scale(2,2); ctx.lineWidth=2; ctx.lineCap="round"; ctx.lineJoin="round";
+  var down=false;
+  function getPos(e){
+    var r=c.getBoundingClientRect();
+    var cx=e.clientX, cy=e.clientY;
+    if(e.touches && e.touches.length>0){cx=e.touches[0].clientX;cy=e.touches[0].clientY}
+    return{x:cx-r.left,y:cy-r.top}
+  }
+  function start(e){e.preventDefault();down=true;var p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}
+  function move(e){e.preventDefault();if(!down)return;var p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();}
+  function end(e){e.preventDefault();down=false;}
+  c.addEventListener("pointerdown",start);
+  c.addEventListener("pointermove",move);
+  c.addEventListener("pointerup",end);
+  c.addEventListener("touchstart",start,{passive:false});
+  c.addEventListener("touchmove",move,{passive:false});
+  c.addEventListener("touchend",end,{passive:false});
+}
+
+function clearSig(id){
+  var c = document.getElementById(id);
+  if(!c) return;
+  c.getContext("2d").clearRect(0,0,c.width,c.height);
+}
+
+function getSigData(id){
+  var c = document.getElementById(id);
+  if(!c) return "";
+  var blank = document.createElement("canvas");
+  blank.width=c.width; blank.height=c.height;
+  if(c.toDataURL()===blank.toDataURL()) return "";
+  return c.toDataURL("image/png");
+}
+
+function loadSigToCanvas(id,data){
+  var c = document.getElementById(id);
+  if(!c||!data) return;
+  var ctx = c.getContext("2d");
+  var img = new Image();
+  img.onload = function(){ctx.clearRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width/2,c.height/2);};
+  img.src = data;
+}
+
+/* ===== UTILS ===== */
+function companyName(id){
+  var companies = db("companies")||[];
+  for(var i=0;i<companies.length;i++) if(companies[i].id===id) return companies[i].name;
+  return "Unknown";
+}
+function toast(msg){
+  var t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show")},2500);
+}
+function openModal(id){document.getElementById(id).classList.add("show");}
+function closeModal(id){document.getElementById(id).classList.remove("show");}
+
+/* ===== INIT ===== */
+initDB();
+resetWTN();
+renderDashboard();
+setTimeout(function(){initSig("sig-settings");initSig("sig-company");},500);
+</script>
+</body>
+</html>
