@@ -2,33 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#1f5f3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Recyclables UK Manager</title>
 <style>
-:root{--g:#1f5f3a;--g2:#2d7a52;--g3:#e8f5ee;--bg:#f4f7f5;--b:#d9dfdb;--m:#66736b;--danger:#c0392b;--shadow:0 2px 8px rgba(0,0,0,.08);--radius:14px;--radius-sm:10px}
+:root{
+  --g:#1f5f3a;--g2:#2d7a52;--g3:#e8f5ee;--bg:#f4f7f5;--b:#d9dfdb;--m:#66736b;
+  --danger:#c0392b;--warn:#f39c12;--shadow:0 2px 8px rgba(0,0,0,.08);
+  --radius:14px;--radius-sm:10px;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:#172019;-webkit-text-size-adjust:100%}
+html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:#172019;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column}
 
 /* Header */
-header{background:var(--g);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:10}
-header h1{margin:0;font-size:20px}
+header{background:var(--g);color:#fff;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:10;flex-shrink:0}
+header h1{margin:0;font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+header .menu-btn{background:none;border:none;color:#fff;font-size:22px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
-/* Top Tabs */
-.tabs{display:flex;gap:4px;background:#fff;border-bottom:1px solid var(--b);padding:8px 16px;position:sticky;top:54px;z-index:9}
-.tab{flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)}
-.tab.active{background:var(--g);color:#fff}
+/* Drawer */
+#drawer{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;transition:opacity .2s}
+#drawer.open{pointer-events:auto;opacity:1}
+#drawer .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+#drawer .panel{position:absolute;left:0;top:0;bottom:0;width:280px;background:#fff;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column}
+#drawer.open .panel{transform:translateX(0)}
+#drawer .panel-head{background:var(--g);color:#fff;padding:20px 16px;font-size:18px;font-weight:700}
+#drawer .panel-nav{flex:1;overflow:auto;padding:8px 0}
+#drawer .nav-item{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:15px;color:#333;cursor:pointer;border-left:4px solid transparent}
+#drawer .nav-item:hover{background:#f5f5f5}
+#drawer .nav-item.active{border-left-color:var(--g);background:var(--g3);color:var(--g);font-weight:700}
+#drawer .nav-icon{width:24px;text-align:center;font-size:18px}
 
-/* Views */
-.view{display:none;padding:14px;max-width:900px;margin:0 auto}
-.view.active{display:block}
+/* Main content */
+main{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
 /* Cards */
 .card{background:#fff;border:1px solid var(--b);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
-.card h2{font-size:17px;margin:0 0 14px}
+.card h2{font-size:17px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
 .card h3{font-size:15px;margin:0 0 10px;color:var(--m)}
 
-/* Grid */
+/* Grid & forms */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .full{grid-column:1/-1}
 @media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
@@ -40,10 +58,12 @@ input[readonly],textarea[readonly],select:disabled{background:#f5f6f5;color:#667
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2366736b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
 
 /* Buttons */
-.btn{border:0;border-radius:var(--radius-sm);padding:13px 16px;font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-.btn:active{opacity:.8}
+.btn{border:0;border-radius:var(--radius-sm);padding:13px 16px;font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
+.btn:active{transform:scale(.97)}
 .btn-primary{background:var(--g);color:#fff}
+.btn-primary:hover{background:var(--g2)}
 .btn-secondary{background:var(--g3);color:var(--g)}
+.btn-secondary:hover{background:#d4edda}
 .btn-danger{background:#fff0f0;color:var(--danger)}
 .btn-ghost{background:transparent;color:var(--m)}
 .btn-block{width:100%}
@@ -54,26 +74,28 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .row .btn{flex:1}
 
 /* Dashboard */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
 .stat-card{background:var(--g);color:#fff;border-radius:var(--radius);padding:16px;text-align:center}
 .stat-card.outbound{background:#8b5a2b}
 .stat-card h3{margin:0 0 6px;font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px}
 .stat-card .val{margin:0;font-size:28px;font-weight:800}
+.stat-card .unit{font-size:13px;opacity:.8}
 
-.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.quick-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
 .qa-btn{background:#fff;border:1px solid var(--b);border-radius:var(--radius);padding:18px 12px;text-align:center;cursor:pointer;box-shadow:var(--shadow)}
 .qa-btn .icon{font-size:28px;margin-bottom:6px;display:block}
 .qa-btn .label{font-size:14px;font-weight:700;color:var(--g)}
-.qa-btn:active{transform:scale(.97);opacity:.9}
+.qa-btn:active{transform:scale(.97)}
 
 .section-title{font-size:13px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px}
 
 /* Lists */
-.list-item{background:#fff;border:1px solid var(--b);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;cursor:pointer;box-shadow:var(--shadow)}
-.list-item:active{border-color:var(--g);background:#f9f9f9}
-.list-item .title{font-weight:700;font-size:15px;margin-bottom:3px}
+.list-item{background:#fff;border:1px solid var(--b);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:var(--shadow)}
+.list-item:hover{border-color:var(--g)}
+.list-item .info{flex:1;min-width:0}
+.list-item .title{font-weight:700;font-size:15px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .list-item .meta{font-size:13px;color:var(--m)}
-.list-item .actions{margin-top:8px;display:flex;gap:6px}
+.list-item .actions{display:flex;gap:6px}
 
 /* Chips */
 .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--g3);color:var(--g);font-size:12px;font-weight:700;margin:0 4px 4px 0}
@@ -87,12 +109,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .stock-card .stock-code{font-size:12px;color:var(--m)}
 .stock-card .stock-qty{text-align:right}
 .stock-card .stock-val{font-size:24px;font-weight:800;color:var(--g)}
+.stock-card .stock-unit{font-size:12px;color:var(--m)}
 
-/* Material rows */
+/* Material rows in WTN */
 .mat-row{display:grid;grid-template-columns:2fr 1fr 1fr 44px;gap:8px;align-items:end;margin-bottom:10px}
 .mat-row .mat-name{grid-column:1/-1}
 @media(min-width:600px){.mat-row .mat-name{grid-column:auto}}
-.mat-row .remove{height:44px;padding:0;background:#fff0f0;color:var(--danger);border:1px solid var(--b);border-radius:var(--radius-sm);font-size:18px;cursor:pointer}
+.mat-row .remove{height:44px;padding:0}
 
 /* Signature */
 .sig-wrap{border:1px solid var(--b);border-radius:var(--radius-sm);overflow:hidden;background:#fff}
@@ -100,126 +123,219 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .sig-tools{padding:8px;text-align:right}
 
 /* Modals */
-.modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;display:none}
-.modal.show{display:block}
-.modal-back{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5)}
-.modal-box{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:var(--radius) var(--radius) 0 0;padding:20px;max-height:90vh;overflow:auto}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal{position:fixed;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center}
+.modal.show{display:flex}
+.modal .modal-back{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.modal .modal-content{position:relative;background:#fff;width:100%;max-width:500px;max-height:85vh;border-radius:var(--radius) var(--radius) 0 0;padding:20px;overflow:auto;animation:slideUp .25s}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .modal-header h3{margin:0;font-size:18px}
-.modal-close{background:none;border:none;font-size:24px;color:var(--m);cursor:pointer}
+.modal-close{background:none;border:none;font-size:24px;color:var(--m);cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
 
-/* Print View */
-.print-view{display:none;background:#fff;padding:30px;max-width:800px;margin:0 auto}
-.print-view h1{margin:0 0 8px;font-size:22px;color:var(--g)}
-.print-view .print-meta{color:#66736b;font-size:13px;margin-bottom:20px}
-.print-view .print-section{margin-bottom:18px}
-.print-view .print-section h3{margin:0 0 8px;font-size:14px;text-transform:uppercase;color:var(--g);border-bottom:2px solid var(--g);padding-bottom:4px}
-.print-view .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.print-view .material-table{width:100%;border-collapse:collapse;font-size:14px}
-.print-view .material-table th,.print-view .material-table td{padding:8px;border-bottom:1px solid #ddd}
-.print-view .material-table th{background:#f5f5f5;font-weight:700}
-.print-view .sig-img{max-width:200px;max-height:80px;border:1px solid #ddd;padding:4px}
+/* WTN Print View */
+#wtn-print-view{display:none;background:#fff;padding:30px;max-width:800px;margin:0 auto}
+#wtn-print-view.show{display:block}
+#wtn-print-view h1{margin:0 0 8px;font-size:22px;color:var(--g)}
+#wtn-print-view .print-meta{color:#66736b;font-size:13px;margin-bottom:20px}
+#wtn-print-view .print-section{margin-bottom:18px}
+#wtn-print-view .print-section h3{margin:0 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--g);border-bottom:2px solid var(--g);padding-bottom:4px}
+#wtn-print-view .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#wtn-print-view .print-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee}
+#wtn-print-view .print-label{color:#66736b;font-size:13px}
+#wtn-print-view .print-val{font-weight:700;font-size:14px}
+#wtn-print-view .sig-img{max-width:200px;max-height:80px;border:1px solid #ddd;padding:4px}
+#wtn-print-view .material-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+#wtn-print-view .material-table th,#wtn-print-view .material-table td{text-align:left;padding:8px;border-bottom:1px solid #ddd}
+#wtn-print-view .material-table th{background:#f5f5f5;font-weight:700}
 
-.empty{text-align:center;padding:40px;color:var(--m)}
-.empty .icon{font-size:48px;margin-bottom:12px}
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:var(--m)}
+.empty .empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
+.empty h3{margin:0 0 6px;font-size:18px;color:#333}
+.empty p{margin:0;font-size:14px}
 
+/* Search */
 .search-wrap{position:relative;margin-bottom:12px}
 .search-wrap input{padding-left:40px}
 .search-wrap::before{content:"🔍";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.5}
 
-.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--g3);color:var(--g)}
+/* Status badges */
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.badge-draft{background:#fff8df;color:#8a6d0b}
+.badge-saved{background:var(--g3);color:var(--g)}
 
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:#222;color:#fff;padding:12px 24px;border-radius:999px;font-size:14px;font-weight:600;z-index:200;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:#222;color:#fff;padding:12px 24px;border-radius:999px;font-size:14px;font-weight:600;z-index:40;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
-/* Stepper */
-.stepper{display:flex;gap:8px;margin-bottom:16px;overflow:auto}
-.step{white-space:nowrap;font-size:13px;font-weight:700;color:var(--m);opacity:.6}
+/* Tabs */
+.tabs{display:flex;gap:4px;background:#fff;border:1px solid var(--b);border-radius:var(--radius-sm);padding:4px;margin-bottom:14px}
+.tab{flex:1;padding:10px;text-align:center;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)}
+.tab.active{background:var(--g);color:#fff}
+
+/* Stepper for WTN */
+.stepper{display:flex;align-items:center;gap:8px;margin-bottom:16px;overflow:auto;padding-bottom:4px}
+.step{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;font-weight:700;color:var(--m);opacity:.6}
 .step.active{opacity:1;color:var(--g)}
 .step.done{opacity:1;color:var(--g)}
-.step .num{width:24px;height:24px;border-radius:50%;background:var(--b);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;margin-right:4px}
+.step .num{width:24px;height:24px;border-radius:50%;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
 .step.active .num,.step.done .num{background:var(--g)}
 
+/* Floating action */
+.fab{position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--g);color:#fff;border:none;font-size:28px;box-shadow:0 4px 12px rgba(0,0,0,.25);cursor:pointer;z-index:15;display:flex;align-items:center;justify-content:center}
+.fab:active{transform:scale(.92)}
+
+/* Print */
 @media print{
-  .tabs,header,#toast,.no-print{display:none!important}
-  body{background:#fff}
-  .view{display:none!important;padding:0}
-  .view.active{display:none!important}
-  .print-view{display:block!important}
+  header,#drawer,.no-print,.fab{display:none!important}
+  body{background:#fff;overflow:visible}
+  main{padding:0;overflow:visible}
+  .page{display:none!important}
+  #wtn-print-view{display:block!important;position:static}
 }
+.nav-tab.active{background:var(--g);color:#fff}
 </style>
+<base target="_blank">
 </head>
 <body>
+<div id="app">
 
-<header><h1>♻️ Recyclables UK Manager</h1></header>
-
-<div class="tabs no-print">
-  <button class="tab active" onclick="showView('dashboard')">🏠 Home</button>
-  <button class="tab" onclick="showView('new-wtn')">➕ New WTN</button>
-  <button class="tab" onclick="showView('archive')">📄 Archive</button>
-  <button class="tab" onclick="showView('companies')">🏢 Companies</button>
-  <button class="tab" onclick="showView('stock')">📦 Stock</button>
-  <button class="tab" onclick="showView('settings')">⚙️ Settings</button>
+<!-- Header -->
+<header style="background:var(--g);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:10">
+  <h1 style="margin:0;font-size:20px">♻️ Recyclables UK Manager</h1>
+</header>
+<div style="display:flex;gap:4px;background:#fff;border-bottom:1px solid var(--b);padding:8px 16px;position:sticky;top:54px;z-index:9">
+  <button class="nav-tab active" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('dashboard')">🏠 Home</button>
+  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('new-wtn')">➕ New WTN</button>
+  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('archive')">📄 Archive</button>
+  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('companies')">🏢 Companies</button>
+  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('stock')">📦 Stock</button>
+  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('settings')">⚙️ Settings</button>
 </div>
 
-<!-- HOME -->
-<div class="view active" id="view-dashboard">
+<!-- Drawer -->
+
+
+<!-- Main -->
+<main id="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
   <div class="stat-grid">
-    <div class="stat-card"><h3>INBOUND TODAY</h3><p class="val" id="dash-inbound">0</p></div>
-    <div class="stat-card outbound"><h3>OUTBOUND TODAY</h3><p class="val" id="dash-outbound">0</p></div>
+    <div class="stat-card">
+      <h3>Inbound Today</h3>
+      <p class="val" id="dash-inbound">0</p>
+      <p class="unit">kg</p>
+    </div>
+    <div class="stat-card outbound">
+      <h3>Outbound Today</h3>
+      <p class="val" id="dash-outbound">0</p>
+      <p class="unit">kg</p>
+    </div>
   </div>
-  <div class="qa-grid">
-    <div class="qa-btn" onclick="showView('new-wtn')"><span class="icon">➕</span><span class="label">New WTN</span></div>
-    <div class="qa-btn" onclick="showView('companies')"><span class="icon">🏢</span><span class="label">Companies</span></div>
-    <div class="qa-btn" onclick="showView('stock')"><span class="icon">📦</span><span class="label">Stock</span></div>
-    <div class="qa-btn" onclick="showView('archive')"><span class="icon">📄</span><span class="label">Archive</span></div>
+  <div class="quick-actions">
+    <div class="qa-btn" onclick="navTo('new-wtn')">
+      <span class="icon">➕</span>
+      <span class="label">New WTN</span>
+    </div>
+    <div class="qa-btn" onclick="navTo('companies')">
+      <span class="icon">🏢</span>
+      <span class="label">Companies</span>
+    </div>
+    <div class="qa-btn" onclick="navTo('stock')">
+      <span class="icon">📦</span>
+      <span class="label">Stock</span>
+    </div>
+    <div class="qa-btn" onclick="navTo('archive')">
+      <span class="icon">📄</span>
+      <span class="label">Archive</span>
+    </div>
   </div>
   <div class="section-title">Recent WTNs</div>
   <div id="dash-recent"></div>
 </div>
 
 <!-- NEW WTN -->
-<div class="view" id="view-new-wtn">
+<div class="page" id="page-new-wtn">
   <div class="card">
     <div class="stepper">
-      <span class="step active" id="st1"><span class="num">1</span>Company</span>
-      <span class="step" id="st2"><span class="num">2</span>Details</span>
-      <span class="step" id="st3"><span class="num">3</span>Materials</span>
-      <span class="step" id="st4"><span class="num">4</span>Sign</span>
+      <div class="step active" id="step1-ind"><span class="num">1</span> Company</div>
+      <div class="step" id="step2-ind"><span class="num">2</span> Details</div>
+      <div class="step" id="step3-ind"><span class="num">3</span> Materials</div>
+      <div class="step" id="step4-ind"><span class="num">4</span> Sign</div>
     </div>
 
-    <div id="step1-box">
+    <!-- Step 1: Direction & Company -->
+    <div id="wtn-step1">
       <label>Direction</label>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <button class="btn btn-primary" style="flex:1" id="btn-in" onclick="setDir('IN')">Inbound</button>
-        <button class="btn btn-secondary" style="flex:1" id="btn-out" onclick="setDir('OUT')">Outbound</button>
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab active" id="tab-in" onclick="setWTNDirection('IN')">Inbound</button>
+        <button class="tab" id="tab-out" onclick="setWTNDirection('OUT')">Outbound</button>
       </div>
       <div class="grid">
-        <div class="full"><label>Company</label><select id="wtn-company" onchange="companyChange()"></select></div>
-        <div class="full"><label>Contact Person</label><input id="wtn-contact" placeholder="Name"></div>
+        <div class="full">
+          <label>Company</label>
+          <select id="wtn-company" onchange="wtnCompanyChanged()"></select>
+        </div>
+        <div class="full">
+          <label>Contact Person</label>
+          <input id="wtn-contact" placeholder="Name of person handing over / receiving">
+        </div>
       </div>
-      <button class="btn btn-primary btn-block btn-lg" style="margin-top:16px" onclick="showStep(2)">Next: Vehicle & Details →</button>
+      <div style="margin-top:16px">
+        <button class="btn btn-primary btn-block btn-lg" onclick="goToStep(2)">Next: Vehicle & Details →</button>
+      </div>
     </div>
 
-    <div id="step2-box" style="display:none">
+    <!-- Step 2: Vehicle & Transfer Details -->
+    <div id="wtn-step2" style="display:none">
       <div class="grid">
-        <div><label>Vehicle</label><select id="wtn-vehicle"><option value="">-- Select --</option></select><button class="btn btn-sm btn-secondary" style="margin-top:6px" onclick="openModal('modal-vehicle')">+ Add Vehicle</button></div>
-        <div><label>Date</label><input id="wtn-date" type="date"></div>
-        <div><label>Time</label><input id="wtn-time" type="time"></div>
-        <div><label>Contained</label><select id="wtn-contained"><option>Small bales</option><option>Mill-size bales</option><option>Loose</option><option>Sacks</option><option>Other</option></select></div>
-        <div class="full"><label>Collection Point</label><input id="wtn-point"></div>
-        <div><label>Broker</label><input id="wtn-broker"></div>
-        <div><label>Broker Reg</label><input id="wtn-broker-reg"></div>
+        <div>
+          <label>Vehicle Registration</label>
+          <select id="wtn-vehicle"><option value="">-- Select vehicle --</option></select>
+          <div style="margin-top:6px"><button class="btn btn-sm btn-secondary" onclick="showAddVehicleModal()">+ Add Vehicle</button></div>
+        </div>
+        <div>
+          <label>Transfer Date</label>
+          <input id="wtn-date" type="date">
+        </div>
+        <div>
+          <label>Transfer Time</label>
+          <input id="wtn-time" type="time">
+        </div>
+        <div>
+          <label>How Contained</label>
+          <select id="wtn-contained">
+            <option>Small bales</option>
+            <option>Mill-size bales</option>
+            <option>Loose</option>
+            <option>Sacks</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="full">
+          <label>Transfer / Collection Point</label>
+          <input id="wtn-transfer-point">
+        </div>
+        <div>
+          <label>Broker / Dealer (if any)</label>
+          <input id="wtn-broker">
+        </div>
+        <div>
+          <label>Broker Registration</label>
+          <input id="wtn-broker-reg">
+        </div>
       </div>
       <div class="row" style="margin-top:16px">
-        <button class="btn btn-ghost" onclick="showStep(1)">← Back</button>
-        <button class="btn btn-primary btn-block btn-lg" onclick="showStep(3)">Next: Materials →</button>
+        <button class="btn btn-ghost" onclick="goToStep(1)">← Back</button>
+        <button class="btn btn-primary btn-block btn-lg" onclick="goToStep(3)">Next: Materials →</button>
       </div>
     </div>
 
-    <div id="step3-box" style="display:none">
+    <!-- Step 3: Materials -->
+    <div id="wtn-step3" style="display:none">
       <div id="wtn-materials"></div>
-      <button class="btn btn-secondary btn-block" onclick="addMaterial()" style="margin:10px 0">+ Add Material</button>
+      <button class="btn btn-secondary btn-block" onclick="addWTNMaterial()" style="margin:10px 0">+ Add Material</button>
       <div class="card" style="background:var(--g3);border-color:var(--g)">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-weight:700">Total Quantity</span>
@@ -227,146 +343,209 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
         </div>
       </div>
       <div class="row" style="margin-top:16px">
-        <button class="btn btn-ghost" onclick="showStep(2)">← Back</button>
-        <button class="btn btn-primary btn-block btn-lg" onclick="showStep(4)">Next: Signatures →</button>
+        <button class="btn btn-ghost" onclick="goToStep(2)">← Back</button>
+        <button class="btn btn-primary btn-block btn-lg" onclick="goToStep(4)">Next: Signatures →</button>
       </div>
     </div>
 
-    <div id="step4-box" style="display:none">
+    <!-- Step 4: Signatures -->
+    <div id="wtn-step4" style="display:none">
       <div class="grid">
         <div>
-          <label id="sig1-label">Customer Signature</label>
-          <div id="saved-sig1-box" style="margin-bottom:8px;display:none"><button class="btn btn-sm btn-secondary" onclick="useSavedSig1()">✓ Use Saved Signature</button></div>
-          <div class="sig-wrap"><canvas id="sig1" class="sig-canvas"></canvas><div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig1')">Clear</button></div></div>
-          <input id="sig1-name" placeholder="Printed name">
+          <label id="sig-party-label">Customer Signature</label>
+          <div id="saved-sig-party-wrap" style="margin-bottom:8px;display:none">
+            <button class="btn btn-sm btn-secondary" onclick="useSavedPartySig()">✓ Use Saved Signature</button>
+          </div>
+          <div class="sig-wrap">
+            <canvas id="sig-party" class="sig-canvas"></canvas>
+            <div class="sig-tools">
+              <button class="btn btn-sm btn-ghost" onclick="clearSig('sig-party')">Clear</button>
+            </div>
+          </div>
+          <input id="sig-party-name" placeholder="Printed name">
         </div>
         <div>
           <label>Recyclables UK Signature</label>
-          <div id="saved-sig2-box" style="margin-bottom:8px;display:none"><button class="btn btn-sm btn-secondary" onclick="useSavedSig2()">✓ Use Saved Signature</button></div>
-          <div class="sig-wrap"><canvas id="sig2" class="sig-canvas"></canvas><div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig2')">Clear</button></div></div>
-          <input id="sig2-name" placeholder="Printed name">
+          <div id="saved-sig-ruk-wrap" style="margin-bottom:8px;display:none">
+            <button class="btn btn-sm btn-secondary" onclick="useSavedRukSig()">✓ Use Saved Signature</button>
+          </div>
+          <div class="sig-wrap">
+            <canvas id="sig-ruk" class="sig-canvas"></canvas>
+            <div class="sig-tools">
+              <button class="btn btn-sm btn-ghost" onclick="clearSig('sig-ruk')">Clear</button>
+            </div>
+          </div>
+          <input id="sig-ruk-name" placeholder="Printed name">
         </div>
       </div>
       <div class="row" style="margin-top:20px">
-        <button class="btn btn-ghost" onclick="showStep(3)">← Back</button>
+        <button class="btn btn-ghost" onclick="goToStep(3)">← Back</button>
         <button class="btn btn-primary btn-block btn-lg" onclick="reviewWTN()">Review WTN</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- REVIEW -->
-<div class="view" id="view-review">
+<!-- WTN REVIEW / PRINT -->
+<div class="page" id="page-wtn-review">
   <div class="card no-print">
     <h2>Review WTN</h2>
-    <button class="btn btn-primary btn-block btn-lg" onclick="saveWTN()">✓ Save WTN</button>
+    <p style="color:var(--m);font-size:14px">Check everything is correct before saving.</p>
+    <div class="row" style="margin-top:14px">
+      <button class="btn btn-primary btn-block btn-lg" onclick="saveWTN()">✓ Save WTN</button>
+    </div>
     <div class="row" style="margin-top:8px">
-      <button class="btn btn-secondary" onclick="showStep(4);showView('new-wtn')">← Edit</button>
-      <button class="btn btn-ghost" onclick="showView('dashboard')">Cancel</button>
+      <button class="btn btn-secondary" onclick="goToStep(4)">← Edit</button>
+      <button class="btn btn-ghost" onclick="navTo('dashboard')">Cancel</button>
     </div>
   </div>
-  <div class="print-view" id="print-view"></div>
+  <div id="wtn-print-view"></div>
 </div>
 
 <!-- ARCHIVE -->
-<div class="view" id="view-archive">
+<div class="page" id="page-archive">
   <div class="card no-print">
-    <div class="search-wrap"><input id="archive-search" placeholder="Search..." oninput="renderArchive()"></div>
+    <div class="search-wrap">
+      <input id="archive-search" placeholder="Search company, vehicle, material, WTN number..." oninput="renderArchive()">
+    </div>
     <div class="row">
-      <select id="archive-dir" onchange="renderArchive()" style="flex:1"><option value="">All</option><option value="IN">Inbound</option><option value="OUT">Outbound</option></select>
-      <input id="archive-date" type="date" onchange="renderArchive()" style="flex:1">
-      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Clear</button>
+      <select id="archive-filter-dir" onchange="renderArchive()" style="flex:1">
+        <option value="">All Directions</option>
+        <option value="IN">Inbound</option>
+        <option value="OUT">Outbound</option>
+      </select>
+      <input id="archive-filter-date" type="date" onchange="renderArchive()" style="flex:1">
+      <button class="btn btn-ghost btn-sm" onclick="clearArchiveFilters()">Clear</button>
     </div>
   </div>
   <div id="archive-list"></div>
 </div>
 
 <!-- COMPANIES -->
-<div class="view" id="view-companies">
+<div class="page" id="page-companies">
   <div class="card no-print">
-    <div class="search-wrap"><input id="company-search" placeholder="Search companies..." oninput="renderCompanies()"></div>
-    <button class="btn btn-primary btn-block" onclick="openCompanyModal()">+ Add Company</button>
+    <div class="search-wrap">
+      <input id="company-search" placeholder="Search companies..." oninput="renderCompanies()">
+    </div>
+    <button class="btn btn-primary btn-block" onclick="showCompanyModal()">+ Add Company</button>
   </div>
   <div id="companies-list"></div>
 </div>
 
 <!-- COMPANY DETAIL -->
-<div class="view" id="view-company-detail">
-  <div class="card no-print"><button class="btn btn-ghost btn-sm" onclick="showView('companies')">← Back to Companies</button></div>
-  <div id="company-detail-box"></div>
+<div class="page" id="page-company-detail">
+  <div class="card no-print">
+    <button class="btn btn-ghost btn-sm" onclick="navTo('companies')">← Back to Companies</button>
+  </div>
+  <div id="company-detail-content"></div>
 </div>
 
 <!-- STOCK -->
-<div class="view" id="view-stock">
+<div class="page" id="page-stock">
   <div id="stock-list"></div>
 </div>
 
 <!-- SETTINGS -->
-<div class="view" id="view-settings">
+<div class="page" id="page-settings">
   <div class="card">
-    <h2>Recyclables UK Details</h2>
+    <h2>🏢 Recyclables UK Details</h2>
     <div class="grid">
       <div class="full"><label>Company Name</label><input id="set-name" value="Recyclables UK"></div>
-      <div class="full"><label>Representative</label><input id="set-rep" value="Ian Brown"></div>
+      <div class="full"><label>Representative Name</label><input id="set-rep" value="Ian Brown"></div>
       <div class="full"><label>Address</label><textarea id="set-address" rows="3">Unit B1, Morston Quays, Stephenson Street, Wallsend, NE28 6UE</textarea></div>
-      <div><label>Carrier Reg</label><input id="set-reg" value="CBDU609852"></div>
-      <div><label>Phone</label><input id="set-phone" value="07526201579"></div>
+      <div><label>Waste Carrier Reg</label><input id="set-reg" value="CBDU609852"></div>
+      <div><label>Telephone</label><input id="set-phone" value="07526201579"></div>
       <div class="full"><label>Email</label><input id="set-email" value="Ian@recyclablesuk.co.uk"></div>
     </div>
     <div style="margin-top:14px">
-      <label>Signature</label>
-      <div class="sig-wrap"><canvas id="sig-settings" class="sig-canvas"></canvas><div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig-settings')">Clear</button></div></div>
+      <label>Recyclables UK Signature</label>
+      <div class="sig-wrap">
+        <canvas id="sig-settings" class="sig-canvas"></canvas>
+        <div class="sig-tools">
+          <button class="btn btn-sm btn-ghost" onclick="clearSig('sig-settings')">Clear</button>
+        </div>
+      </div>
     </div>
     <button class="btn btn-primary btn-block" style="margin-top:16px" onclick="saveSettings()">Save Settings</button>
   </div>
   <div class="card" style="margin-top:12px">
-    <button class="btn btn-danger btn-block" onclick="exportData()">📤 Export Data</button>
+    <h2>⚠️ Danger Zone</h2>
+    <button class="btn btn-danger btn-block" onclick="exportData()">📤 Export All Data (JSON)</button>
     <div style="height:8px"></div>
-    <button class="btn btn-danger btn-block" onclick="if(confirm('DELETE ALL DATA?')){localStorage.clear();location.reload()}">🗑 Delete All Data</button>
+    <button class="btn btn-danger btn-block" onclick="if(confirm('DELETE ALL DATA? This cannot be undone.')){localStorage.clear();location.reload()}">🗑 Delete All Data</button>
   </div>
 </div>
 
+</main>
+
+<!-- Floating Action Button -->
+<button class="fab no-print" onclick="navTo('new-wtn')">+</button>
+
+<!-- Toast -->
 <div id="toast"></div>
 
-<!-- Vehicle Modal -->
+<!-- Add Vehicle Modal -->
 <div class="modal" id="modal-vehicle">
   <div class="modal-back" onclick="closeModal('modal-vehicle')"></div>
-  <div class="modal-box">
+  <div class="modal-content">
     <div class="modal-header"><h3>Add Vehicle</h3><button class="modal-close" onclick="closeModal('modal-vehicle')">×</button></div>
-    <label>Registration</label><input id="new-vehicle-reg" style="text-transform:uppercase">
-    <label>Notes</label><input id="new-vehicle-notes">
-    <button class="btn btn-primary btn-block" style="margin-top:14px" onclick="addVehicle()">Add Vehicle</button>
+    <label>Registration</label>
+    <input id="new-vehicle-reg" placeholder="e.g. AB12 CDE" style="text-transform:uppercase">
+    <label>Notes</label>
+    <input id="new-vehicle-notes" placeholder="Optional">
+    <button class="btn btn-primary btn-block" style="margin-top:14px" onclick="addVehicleFromModal()">Add Vehicle</button>
   </div>
 </div>
 
 <!-- Company Modal -->
 <div class="modal" id="modal-company">
   <div class="modal-back" onclick="closeModal('modal-company')"></div>
-  <div class="modal-box">
-    <div class="modal-header"><h3 id="co-modal-title">Add Company</h3><button class="modal-close" onclick="closeModal('modal-company')">×</button></div>
-    <input type="hidden" id="co-modal-id">
+  <div class="modal-content">
+    <div class="modal-header"><h3 id="company-modal-title">Add Company</h3><button class="modal-close" onclick="closeModal('modal-company')">×</button></div>
+    <input type="hidden" id="company-modal-id">
     <div class="grid">
-      <div class="full"><label>Name *</label><input id="co-name"></div>
-      <div><label>Contact</label><input id="co-contact"></div>
+      <div class="full"><label>Company Name *</label><input id="co-name"></div>
+      <div><label>Contact Person</label><input id="co-contact"></div>
       <div><label>Mobile</label><input id="co-mobile" type="tel"></div>
       <div class="full"><label>Email</label><input id="co-email" type="email"></div>
-      <div><label>Preferred</label><select id="co-pref"><option>WhatsApp</option><option>Email</option><option>Phone</option></select></div>
+      <div><label>Preferred Contact</label>
+        <select id="co-pref"><option>WhatsApp</option><option>Email</option><option>Phone</option></select>
+      </div>
       <div class="full"><label>Address</label><textarea id="co-address" rows="2"></textarea></div>
       <div><label>Postcode</label><input id="co-postcode"></div>
-      <div><label>SIC</label><input id="co-sic"></div>
+      <div><label>SIC Code</label><input id="co-sic" placeholder="e.g. 46750"></div>
       <div class="full"><label>Notes</label><textarea id="co-notes" rows="2"></textarea></div>
     </div>
     <div style="margin-top:14px">
-      <label>Signature</label>
-      <div class="sig-wrap"><canvas id="sig-company" class="sig-canvas"></canvas><div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig-company')">Clear</button></div></div>
+      <label>Authorised Signature</label>
+      <div class="sig-wrap">
+        <canvas id="sig-company" class="sig-canvas"></canvas>
+        <div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig-company')">Clear</button></div>
+      </div>
     </div>
-    <button class="btn btn-primary btn-block" style="margin-top:14px" onclick="saveCompany()">Save Company</button>
+    <button class="btn btn-primary btn-block" style="margin-top:14px" onclick="saveCompanyModal()">Save Company</button>
+  </div>
+</div>
+
+<!-- WTN Actions Modal -->
+<div class="modal" id="modal-wtn-actions">
+  <div class="modal-back" onclick="closeModal('modal-wtn-actions')"></div>
+  <div class="modal-content">
+    <div class="modal-header"><h3>WTN Actions</h3><button class="modal-close" onclick="closeModal('modal-wtn-actions')">×</button></div>
+    <input type="hidden" id="action-wtn-id">
+    <button class="btn btn-secondary btn-block" onclick="actionReprint()">🖨 Reprint / PDF</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-secondary btn-block" onclick="actionResend()">📤 Resend</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-secondary btn-block" onclick="actionDuplicate()">📋 Duplicate</button>
+    <div style="height:8px"></div>
+    <button class="btn btn-danger btn-block" onclick="actionDelete()">🗑 Delete</button>
   </div>
 </div>
 
 <script>
-/* ===== DATA ===== */
-var MATS = {
+/* ================= DATA & STATE ================= */
+const MATS = {
   card:{name:"Cardboard packaging",code:"15 01 01",desc:"Paper and cardboard packaging"},
   ldpe:{name:"LDPE packaging",code:"15 01 02",desc:"Plastic packaging (LDPE film/shrink wrap)"},
   plastic19:{name:"Processed plastic from mechanical treatment",code:"19 12 04",desc:"Plastic and rubber from mechanical treatment of waste"},
@@ -375,477 +554,497 @@ var MATS = {
   metal:{name:"Metal packaging",code:"15 01 03",desc:"Steel/aluminium cans and packaging"}
 };
 
-var DEFAULT_COMPANIES = [
+const DEFAULT_COMPANIES = [
   {id:"c1",name:"Pallet Supplies Limited",contact:"",mobile:"",email:"",pref:"WhatsApp",address:"Bay 3, Pallion Shipyard, Pallion New Road, Sunderland",postcode:"SR4 6LL",sic:"",vehicles:[],signature:"",notes:""},
   {id:"c2",name:"Youngs Quality Food Ltd",contact:"",mobile:"",email:"",pref:"WhatsApp",address:"Rivergreen Industrial Estate, Unit 6A Eastway, Sunderland",postcode:"SR4 6AD",sic:"",vehicles:[],signature:"",notes:""},
   {id:"c3",name:"International Cookware",contact:"",mobile:"",email:"",pref:"Email",address:"Unit 1a Hall Dene Way, Seaham",postcode:"SR7 0PU",sic:"",vehicles:[],signature:"",notes:""}
 ];
 
-var DEFAULT_SETTINGS = {
+const DEFAULT_SETTINGS = {
   name:"Recyclables UK",rep:"Ian Brown",address:"Unit B1, Morston Quays, Stephenson Street, Wallsend, NE28 6UE",
   reg:"CBDU609852",phone:"07526201579",email:"Ian@recyclablesuk.co.uk",signature:""
 };
 
 function db(key,val){
-  if(val===undefined) return JSON.parse(localStorage.getItem("ruk3_"+key)||"null");
+  if(val===undefined)return JSON.parse(localStorage.getItem("ruk3_"+key)||"null");
   localStorage.setItem("ruk3_"+key,JSON.stringify(val));
 }
-
 function initDB(){
   if(!db("companies")) db("companies",DEFAULT_COMPANIES);
   if(!db("wtns")) db("wtns",[]);
   if(!db("settings")) db("settings",DEFAULT_SETTINGS);
-  var old = JSON.parse(localStorage.getItem("ruk_wtn")||"[]");
+  // Migrate old WTNs if present
+  const old = JSON.parse(localStorage.getItem("ruk_wtn")||"[]");
   if(old.length && !db("migrated")){
-    var existing = db("wtns");
-    var converted = [];
-    for(var i=0;i<old.length;i++){
-      var o = old[i];
-      var cid = "c1";
-      for(var j=0;j<DEFAULT_COMPANIES.length;j++){if(DEFAULT_COMPANIES[j].name===o.company){cid=DEFAULT_COMPANIES[j].id;break}}
-      var mats = [];
-      if(o.materials){for(var k=0;k<o.materials.length;k++){var m=o.materials[k];mats.push({key:m.key,name:m.name,code:m.code,desc:m.description,quantity:parseFloat(m.quantity)||0});}}
-      converted.push({id:"old_"+i,number:o.number,direction:o.direction,date:o.date,time:o.time,companyId:cid,vehicle:o.vehicle||"",contained:o.contained||"Small bales",materials:mats,totalKg:parseFloat(o.totalKg)||0,transferPoint:o.transferPoint||"",broker:o.broker||"",brokerReg:o.brokerReg||"",sig1Name:o.sig1Name||"",sig2Name:o.sig2Name||"",sig1:"",sig2:"",status:"saved",createdAt:o.saved||new Date().toISOString()});
-    }
-    db("wtns",converted.concat(existing));
+    const existing = db("wtns");
+    const converted = old.map((o,i)=>{
+      const cid = DEFAULT_COMPANIES.find(c=>c.name===o.company)?.id || "c1";
+      return {
+        id:"old_"+i,number:o.number,direction:o.direction,date:o.date,time:o.time,
+        companyId:cid,vehicle:o.vehicle||"",contained:o.contained||"Small bales",
+        materials:(o.materials||[]).map(m=>({key:m.key,name:m.name,code:m.code,desc:m.description,quantity:parseFloat(m.quantity)||0})),
+        totalKg:parseFloat(o.totalKg)||0,transferPoint:o.transferPoint||"",broker:o.broker||"",brokerReg:o.brokerReg||"",
+        sig1Name:o.sig1Name||"",sig2Name:o.sig2Name||"",sig1:"",sig2:"",status:"saved",createdAt:o.saved||new Date().toISOString()
+      };
+    });
+    db("wtns",[...converted,...existing]);
     db("migrated",true);
   }
 }
 
-/* ===== NAVIGATION - SIMPLEST POSSIBLE ===== */
-var ALL_VIEWS = ["dashboard","new-wtn","archive","companies","stock","settings","company-detail","review"];
-
-function showView(name){
-  for(var i=0;i<ALL_VIEWS.length;i++){
-    var el = document.getElementById("view-"+ALL_VIEWS[i]);
-    if(el) el.style.display = "none";
-  }
-  var target = document.getElementById("view-"+name);
-  if(target) target.style.display = "block";
-
-  var tabs = document.getElementsByClassName("tab");
-  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove("active");
+/* ================= ROUTER ================= */
+let currentPage = "dashboard";
+function navTo(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  var el = document.getElementById("page-"+page);
+  if(el) el.classList.add("active");
+  document.querySelectorAll(".nav-tab").forEach(n=>n.classList.remove("active"));
+  var tabs = document.querySelectorAll(".nav-tab");
   var map = {dashboard:0,"new-wtn":1,archive:2,companies:3,stock:4,settings:5};
-  if(map[name]!==undefined && tabs[map[name]]) tabs[map[name]].classList.add("active");
-
+  if(map[page]!==undefined && tabs[map[page]]) tabs[map[page]].classList.add("active");
+  currentPage = page;
   window.scrollTo(0,0);
-  if(name==="dashboard") renderDashboard();
-  if(name==="archive") renderArchive();
-  if(name==="companies") renderCompanies();
-  if(name==="stock") renderStock();
-  if(name==="settings") loadSettings();
+  if(page==="dashboard") renderDashboard();
+  if(page==="archive") renderArchive();
+  if(page==="companies") renderCompanies();
+  if(page==="stock") renderStock();
+  if(page==="settings") loadSettings();
 }
 
-/* ===== DASHBOARD ===== */
+
+/* ================= DASHBOARD ================= */
 function renderDashboard(){
-  var wtns = db("wtns")||[];
-  var today = new Date().toISOString().slice(0,10);
-  var inb=0, out=0;
-  for(var i=0;i<wtns.length;i++){
-    var w = wtns[i];
-    if(w.date===today){if(w.direction==="IN") inb += w.totalKg||0; else out += w.totalKg||0;}
-  }
+  const wtns = db("wtns");
+  const today = new Date().toISOString().slice(0,10);
+  let inb=0,out=0;
+  wtns.filter(w=>w.date===today).forEach(w=>{
+    if(w.direction==="IN") inb += w.totalKg||0;
+    else out += w.totalKg||0;
+  });
   document.getElementById("dash-inbound").textContent = inb.toLocaleString();
   document.getElementById("dash-outbound").textContent = out.toLocaleString();
-  var recent = wtns.slice().sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt)}).slice(0,5);
-  var el = document.getElementById("dash-recent");
-  if(!recent.length){el.innerHTML='<div class="empty"><div class="icon">📄</div><h3>No WTNs yet</h3><p>Create your first WTN to see it here.</p></div>';return;}
-  var html = "";
-  for(var i=0;i<recent.length;i++){
-    var w = recent[i];
-    html += '<div class="list-item" onclick="viewWTN(''+w.id+'')"><div class="title">'+w.number+'</div><div class="meta">'+w.date+' · '+(w.direction==="IN"?"Inbound":"Outbound")+' · '+w.totalKg+'kg · '+companyName(w.companyId)+'</div></div>';
-  }
-  el.innerHTML = html;
+  const recent = wtns.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
+  const el = document.getElementById("dash-recent");
+  if(!recent.length){el.innerHTML='<div class="empty"><div class="empty-icon">📄</div><h3>No WTNs yet</h3><p>Create your first WTN to see it here.</p></div>';return}
+  el.innerHTML = recent.map(w=>`
+    <div class="list-item" onclick="viewWTN('${w.id}')">
+      <div class="info">
+        <div class="title">${w.number}</div>
+        <div class="meta">${w.date} · ${w.direction==="IN"?"Inbound":"Outbound"} · ${w.totalKg}kg · ${companyName(w.companyId)}</div>
+      </div>
+      <span class="badge badge-saved">Saved</span>
+    </div>
+  `).join("");
 }
 
-/* ===== WTN CREATION ===== */
-var wtnDir = "IN";
-var wtnStep = 1;
-var reviewData = null;
+/* ================= WTN CREATION ================= */
+let wtnState = {direction:"IN",step:1,companyId:"",materials:[]};
 
-function setDir(dir){
-  wtnDir = dir;
-  document.getElementById("btn-in").className = dir==="IN"?"btn btn-primary":"btn btn-secondary";
-  document.getElementById("btn-out").className = dir==="OUT"?"btn btn-primary":"btn btn-secondary";
-  populateCompanies();
-  document.getElementById("sig1-label").textContent = dir==="IN"?"Customer Signature":"Recyclables UK Signature";
+function setWTNDirection(dir){
+  wtnState.direction = dir;
+  document.getElementById("tab-in").classList.toggle("active",dir==="IN");
+  document.getElementById("tab-out").classList.toggle("active",dir==="OUT");
+  populateWTNCompanies();
+  document.getElementById("sig-party-label").textContent = dir==="IN"?"Customer / Transferor Signature":"Recyclables UK / Transferor Signature";
 }
 
-function populateCompanies(){
-  var companies = db("companies")||[];
-  var sel = document.getElementById("wtn-company");
-  var opts = "";
-  for(var i=0;i<companies.length;i++) opts += '<option value="'+companies[i].id+'">'+companies[i].name+'</option>';
-  sel.innerHTML = opts;
-  companyChange();
+function populateWTNCompanies(){
+  const companies = db("companies")||[];
+  const sel = document.getElementById("wtn-company");
+  sel.innerHTML = companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  if(companies.length) wtnCompanyChanged();
 }
 
-function companyChange(){
-  var companies = db("companies")||[];
-  var cid = document.getElementById("wtn-company").value;
-  var c = null;
-  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
+function wtnCompanyChanged(){
+  const companies = db("companies")||[];
+  const cid = document.getElementById("wtn-company").value;
+  const c = companies.find(x=>x.id===cid);
   if(!c) return;
+  wtnState.companyId = cid;
   document.getElementById("wtn-contact").value = c.contact||"";
-  var vsel = document.getElementById("wtn-vehicle");
-  var vopts = '<option value="">-- Select --</option>';
-  if(c.vehicles) for(var i=0;i<c.vehicles.length;i++) vopts += '<option value="'+c.vehicles[i].reg+'">'+c.vehicles[i].reg+'</option>';
-  vsel.innerHTML = vopts;
-  var tp = wtnDir==="IN" ? (c.address+(c.postcode?", "+c.postcode:"")) : (db("settings")?db("settings").address||"":"");
-  document.getElementById("wtn-point").value = tp;
-  document.getElementById("saved-sig1-box").style.display = c.signature?"block":"none";
+  // Populate vehicles
+  const vsel = document.getElementById("wtn-vehicle");
+  vsel.innerHTML = '<option value="">-- Select vehicle --</option>' + (c.vehicles||[]).map(v=>`<option value="${v.reg}">${v.reg}</option>`).join("") + '<option value="OTHER">Other / Not listed</option>';
+  // Transfer point
+  const tp = wtnState.direction==="IN" ? (c.address+(c.postcode?", "+c.postcode:"")) : (db("settings").address||"");
+  document.getElementById("wtn-transfer-point").value = tp;
+  // Saved sig
+  const savedWrap = document.getElementById("saved-sig-party-wrap");
+  if(c.signature){savedWrap.style.display="block";}else{savedWrap.style.display="none";}
 }
 
-function showStep(n){
-  wtnStep = n;
-  for(var i=1;i<=4;i++){
-    document.getElementById("step"+i+"-box").style.display = i===n?"block":"none";
-    var st = document.getElementById("st"+i);
-    st.classList.remove("active","done");
-    if(i<n) st.classList.add("done");
-    if(i===n) st.classList.add("active");
+function goToStep(n){
+  wtnState.step = n;
+  for(let i=1;i<=4;i++){
+    document.getElementById("wtn-step"+i).style.display = i===n?"block":"none";
+    const ind = document.getElementById("step"+i+"-ind");
+    ind.classList.remove("active","done");
+    if(i<n) ind.classList.add("done");
+    if(i===n) ind.classList.add("active");
   }
   if(n===4){
-    var rukSig = db("settings")?db("settings").signature:"";
-    document.getElementById("saved-sig2-box").style.display = rukSig?"block":"none";
-    document.getElementById("sig2-name").value = db("settings")?db("settings").rep||"Ian Brown":"Ian Brown";
-    setTimeout(function(){initSig("sig1");initSig("sig2");},50);
+    // Check saved RUK sig
+    const rukSig = db("settings")?.signature;
+    document.getElementById("saved-sig-ruk-wrap").style.display = rukSig?"block":"none";
+    document.getElementById("sig-ruk-name").value = db("settings")?.rep||"Ian Brown";
+    setTimeout(()=>{initSig("sig-party");initSig("sig-ruk");},50);
   }
 }
 
-function addMaterial(key,qty){
-  if(!key) key="card"; if(qty===undefined) qty="";
-  var id = "mat_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
-  var div = document.createElement("div");
+function addWTNMaterial(key="card",qty=""){
+  const id = "mat_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
+  const div = document.createElement("div");
   div.className = "mat-row";
   div.id = id;
-  var opts = "";
-  for(var k in MATS) opts += '<option value="'+k+'" '+(k===key?"selected":"")+'>'+MATS[k].name+'</option>';
-  div.innerHTML = '<div class="mat-name"><label>Material</label><select class="mat-key" onchange="updateCode(''+id+'')">'+opts+'</select></div><div><label>LoW/EWC</label><input class="mat-code" readonly></div><div><label>Weight (kg)</label><input class="mat-qty" type="number" min="0" step="0.1" value="'+qty+'" oninput="updateTotal()"></div><button class="remove" onclick="document.getElementById(''+id+'').remove();updateTotal()">×</button>';
+  div.innerHTML = `
+    <div class="mat-name"><label>Material</label><select class="mat-key" onchange="updateMatCode('${id}')">${Object.entries(MATS).map(([k,m])=>`<option value="${k}" ${k===key?"selected":""}>${m.name}</option>`).join("")}</select></div>
+    <div><label>LoW / EWC</label><input class="mat-code" readonly></div>
+    <div><label>Weight (kg)</label><input class="mat-qty" type="number" min="0" step="0.1" value="${qty}" oninput="updateWTNTotal()"></div>
+    <button class="btn danger remove" onclick="document.getElementById('${id}').remove();updateWTNTotal()">×</button>
+  `;
   document.getElementById("wtn-materials").appendChild(div);
-  updateCode(id);
-  updateTotal();
+  updateMatCode(id);
+  updateWTNTotal();
 }
 
-function updateCode(id){
-  var row = document.getElementById(id);
+function updateMatCode(id){
+  const row = document.getElementById(id);
   if(!row) return;
-  var key = row.querySelector(".mat-key").value;
-  row.querySelector(".mat-code").value = MATS[key]?MATS[key].code:"";
+  const key = row.querySelector(".mat-key").value;
+  row.querySelector(".mat-code").value = MATS[key]?.code||"";
 }
 
-function updateTotal(){
-  var t=0;
-  var els = document.querySelectorAll(".mat-qty");
-  for(var i=0;i<els.length;i++) t += parseFloat(els[i].value)||0;
+function updateWTNTotal(){
+  let t=0;
+  document.querySelectorAll(".mat-qty").forEach(x=>t+=parseFloat(x.value)||0);
   document.getElementById("wtn-total").textContent = t.toLocaleString();
 }
 
-function addVehicle(){
-  var reg = document.getElementById("new-vehicle-reg").value.trim().toUpperCase();
-  if(!reg){toast("Enter registration");return;}
-  var companies = db("companies");
-  var cid = document.getElementById("wtn-company").value;
-  var c = null;
-  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
-  if(c){c.vehicles = c.vehicles||[]; c.vehicles.push({reg:reg,notes:document.getElementById("new-vehicle-notes").value.trim()}); db("companies",companies);}
+function showAddVehicleModal(){
+  document.getElementById("new-vehicle-reg").value = "";
+  document.getElementById("new-vehicle-notes").value = "";
+  openModal("modal-vehicle");
+}
+
+function addVehicleFromModal(){
+  const reg = document.getElementById("new-vehicle-reg").value.trim().toUpperCase();
+  const notes = document.getElementById("new-vehicle-notes").value.trim();
+  if(!reg){toast("Enter a registration");return}
+  const companies = db("companies");
+  const cid = document.getElementById("wtn-company").value;
+  const c = companies.find(x=>x.id===cid);
+  if(c){c.vehicles = c.vehicles||[]; c.vehicles.push({reg,notes}); db("companies",companies);}
   closeModal("modal-vehicle");
-  companyChange();
+  wtnCompanyChanged();
   document.getElementById("wtn-vehicle").value = reg;
   toast("Vehicle added");
 }
 
-function useSavedSig1(){
-  var companies = db("companies");
-  var cid = document.getElementById("wtn-company").value;
-  var c = null;
-  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
+function useSavedPartySig(){
+  const companies = db("companies");
+  const c = companies.find(x=>x.id===wtnState.companyId);
   if(c&&c.signature){
-    var canvas = document.getElementById("sig1");
-    var ctx = canvas.getContext("2d");
-    var img = new Image();
-    img.onload = function(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width/2,canvas.height/2);};
+    const canvas = document.getElementById("sig-party");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = ()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width/2,canvas.height/2);};
     img.src = c.signature;
   }
 }
 
-function useSavedSig2(){
-  var sig = db("settings")?db("settings").signature:"";
+function useSavedRukSig(){
+  const sig = db("settings")?.signature;
   if(sig){
-    var canvas = document.getElementById("sig2");
-    var ctx = canvas.getContext("2d");
-    var img = new Image();
-    img.onload = function(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width/2,canvas.height/2);};
+    const canvas = document.getElementById("sig-ruk");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = ()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width/2,canvas.height/2);};
     img.src = sig;
   }
 }
 
 function reviewWTN(){
-  var companies = db("companies");
-  var settings = db("settings");
-  var cid = document.getElementById("wtn-company").value;
-  var c = null;
-  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
-  var mats = [];
-  var rows = document.querySelectorAll(".mat-row");
-  for(var i=0;i<rows.length;i++){
-    var r = rows[i];
-    var k = r.querySelector(".mat-key").value;
-    var q = parseFloat(r.querySelector(".mat-qty").value)||0;
-    if(q>0) mats.push({key:k,name:MATS[k].name,code:MATS[k].code,desc:MATS[k].desc,quantity:q});
-  }
-  var total = 0;
-  for(var i=0;i<mats.length;i++) total += mats[i].quantity;
-  var date = document.getElementById("wtn-date").value;
-  var time = document.getElementById("wtn-time").value;
-  var vehicle = document.getElementById("wtn-vehicle").value;
-  var contained = document.getElementById("wtn-contained").value;
-  var point = document.getElementById("wtn-point").value;
-  var broker = document.getElementById("wtn-broker").value;
-  var brokerReg = document.getElementById("wtn-broker-reg").value;
-  var contact = document.getElementById("wtn-contact").value;
-  var sig1Name = document.getElementById("sig1-name").value;
-  var sig2Name = document.getElementById("sig2-name").value;
+  const companies = db("companies");
+  const settings = db("settings");
+  const c = companies.find(x=>x.id===wtnState.companyId);
+  const mats = [...document.querySelectorAll(".mat-row")].map(r=>{
+    const k = r.querySelector(".mat-key").value;
+    return {key:k,name:MATS[k].name,code:MATS[k].code,desc:MATS[k].desc,quantity:parseFloat(r.querySelector(".mat-qty").value)||0};
+  }).filter(m=>m.quantity>0);
 
-  function slug(s){return (s||"PARTY").toUpperCase().replace(/[^A-Z0-9]+/g,"").slice(0,18)||"PARTY"}
-  var dkey = date.replace(/-/g,"");
-  var allWtns = db("wtns")||[];
-  var prefix = "RUK-"+wtnDir+"-"+slug(c.name)+"-"+dkey+"-";
-  var maxNum = 0;
-  for(var i=0;i<allWtns.length;i++){
-    if(allWtns[i].number && allWtns[i].number.indexOf(prefix)===0){
-      var n = parseInt(allWtns[i].number.split("-").pop())||0;
-      if(n>maxNum) maxNum=n;
-    }
-  }
-  var number = prefix + String(maxNum+1).padStart(5,"0");
+  const total = mats.reduce((s,m)=>s+m.quantity,0);
+  const date = document.getElementById("wtn-date").value;
+  const time = document.getElementById("wtn-time").value;
+  const vehicle = document.getElementById("wtn-vehicle").value;
+  const contained = document.getElementById("wtn-contained").value;
+  const transferPoint = document.getElementById("wtn-transfer-point").value;
+  const broker = document.getElementById("wtn-broker").value;
+  const brokerReg = document.getElementById("wtn-broker-reg").value;
+  const contact = document.getElementById("wtn-contact").value;
+  const sig1Name = document.getElementById("sig-party-name").value;
+  const sig2Name = document.getElementById("sig-ruk-name").value;
 
-  reviewData = {
-    id:"wtn_"+Date.now(),number:number,direction:wtnDir,date:date,time:time,
-    companyId:c.id,vehicle:vehicle,contained:contained,materials:mats,totalKg:total,
-    transferPoint:point,broker:broker,brokerReg:brokerReg,contact:contact,
-    sig1Name:sig1Name,sig2Name:sig2Name,
-    sig1:getSigData("sig1"),sig2:getSigData("sig2"),
+  // Generate number
+  const slug = (s)=>(s||"PARTY").toUpperCase().replace(/[^A-Z0-9]+/g,"").slice(0,18)||"PARTY";
+  const dkey = date.replace(/-/g,"");
+  const allWtns = db("wtns")||[];
+  const prefix = `RUK-${wtnState.direction}-${slug(c.name)}-${dkey}-`;
+  const nums = allWtns.filter(x=>x.number?.startsWith(prefix)).map(x=>parseInt(x.number.split("-").pop())||0);
+  const seq = String(Math.max(0,...nums)+1).padStart(5,"0");
+  const number = prefix + seq;
+
+  wtnState.reviewData = {
+    id:"wtn_"+Date.now(),number,direction:wtnState.direction,date,time,
+    companyId:c.id,vehicle,contained,materials:mats,totalKg:total,
+    transferPoint,broker,brokerReg,contact,sig1Name,sig2Name,
+    sig1:getSigData("sig-party"),sig2:getSigData("sig-ruk"),
     status:"draft",createdAt:new Date().toISOString()
   };
 
-  var partyLabel = wtnDir==="IN"?"Transferor / Supplier":"Recyclables UK / Transferor";
-  var rukLabel = wtnDir==="IN"?"Transferee / Recyclables UK":"Transferee / Customer";
-  var matRows = "";
-  for(var i=0;i<mats.length;i++){var m=mats[i];matRows+='<tr><td>'+m.name+'</td><td>'+m.code+'</td><td>'+m.desc+'</td><td style="text-align:right;font-weight:700">'+m.quantity+' kg</td></tr>';}
+  // Build print view
+  const partyLabel = wtnState.direction==="IN"?"Transferor / Supplier":"Recyclables UK / Transferor";
+  const rukLabel = wtnState.direction==="IN"?"Transferee / Recyclables UK":"Transferee / Customer";
+  const rukAddress = settings.address||"";
 
-  document.getElementById("print-view").innerHTML = 
-    '<h1>Recyclables UK - Waste Transfer Note</h1>'+
-    '<div class="print-meta">WTN: <b>'+number+'</b> | Date: '+date+' | Time: '+time+'</div>'+
-    '<div class="print-section"><h3>Transfer Details</h3><div class="print-grid">'+
-    '<div><div class="print-label">Direction</div><div class="print-val">'+(wtnDir==="IN"?"Inbound":"Outbound")+'</div></div>'+
-    '<div><div class="print-label">Vehicle</div><div class="print-val">'+(vehicle||"-")+'</div></div>'+
-    '<div><div class="print-label">Contained</div><div class="print-val">'+contained+'</div></div>'+
-    '<div><div class="print-label">Point</div><div class="print-val">'+(point||"-")+'</div></div>'+
-    '</div></div>'+
-    '<div class="print-section"><h3>Materials</h3><table class="material-table"><tr><th>Material</th><th>LoW/EWC</th><th>Description</th><th style="text-align:right">Qty</th></tr>'+matRows+'<tr style="background:#f5f5f5;font-weight:800"><td colspan="3">TOTAL</td><td style="text-align:right">'+total.toLocaleString()+' kg</td></tr></table></div>'+
-    '<div class="print-section"><h3>'+partyLabel+'</h3><div class="print-grid">'+
-    '<div><div class="print-label">Company</div><div class="print-val">'+c.name+'</div></div>'+
-    '<div><div class="print-label">Contact</div><div class="print-val">'+(contact||"-")+'</div></div>'+
-    '<div class="full"><div class="print-label">Address</div><div class="print-val">'+(c.address||"")+(c.postcode?", "+c.postcode:"")+'</div></div>'+
-    '</div><div style="margin-top:10px"><div class="print-label">Signature</div>'+(reviewData.sig1?'<img class="sig-img" src="'+reviewData.sig1+'">':'<span style="color:#999">No signature</span>')+'<div style="margin-top:4px;font-size:13px">'+(sig1Name||"")+'</div></div></div>'+
-    '<div class="print-section"><h3>'+rukLabel+'</h3><div class="print-grid">'+
-    '<div><div class="print-label">Company</div><div class="print-val">'+(settings?settings.name||"Recyclables UK":"Recyclables UK")+'</div></div>'+
-    '<div><div class="print-label">Rep</div><div class="print-val">'+(settings?settings.rep||"Ian Brown":"Ian Brown")+'</div></div>'+
-    '<div class="full"><div class="print-label">Address</div><div class="print-val">'+(settings?settings.address||"":"")+'</div></div>'+
-    '<div><div class="print-label">Reg</div><div class="print-val">'+(settings?settings.reg||"-":"-")+'</div></div>'+
-    '</div><div style="margin-top:10px"><div class="print-label">Signature</div>'+(reviewData.sig2?'<img class="sig-img" src="'+reviewData.sig2+'">':'<span style="color:#999">No signature</span>')+'<div style="margin-top:4px;font-size:13px">'+(sig2Name||"")+'</div></div></div>';
+  let matRows = mats.map(m=>`<tr><td>${m.name}</td><td>${m.code}</td><td>${m.desc}</td><td style="text-align:right;font-weight:700">${m.quantity} kg</td></tr>`).join("");
 
-  showView("review");
+  document.getElementById("wtn-print-view").innerHTML = `
+    <h1>♻️ Recyclables UK — Waste Transfer Note</h1>
+    <div class="print-meta">WTN Number: <b>${number}</b> &nbsp;|&nbsp; Date: ${date} &nbsp;|&nbsp; Time: ${time}</div>
+
+    <div class="print-section">
+      <h3>Transfer Details</h3>
+      <div class="print-grid">
+        <div><div class="print-label">Direction</div><div class="print-val">${wtnState.direction==="IN"?"Inbound — to Recyclables UK":"Outbound — from Recyclables UK"}</div></div>
+        <div><div class="print-label">Vehicle</div><div class="print-val">${vehicle||"—"}</div></div>
+        <div><div class="print-label">How Contained</div><div class="print-val">${contained}</div></div>
+        <div><div class="print-label">Collection Point</div><div class="print-val">${transferPoint||"—"}</div></div>
+      </div>
+    </div>
+
+    <div class="print-section">
+      <h3>Materials</h3>
+      <table class="material-table">
+        <tr><th>Material</th><th>LoW/EWC</th><th>Description</th><th style="text-align:right">Quantity</th></tr>
+        ${matRows}
+        <tr style="background:#f5f5f5;font-weight:800"><td colspan="3">TOTAL</td><td style="text-align:right">${total.toLocaleString()} kg</td></tr>
+      </table>
+    </div>
+
+    <div class="print-section">
+      <h3>${partyLabel}</h3>
+      <div class="print-grid">
+        <div><div class="print-label">Company</div><div class="print-val">${c.name}</div></div>
+        <div><div class="print-label">Contact</div><div class="print-val">${contact||"—"}</div></div>
+        <div class="full"><div class="print-label">Address</div><div class="print-val">${c.address||""}${c.postcode?", "+c.postcode:""}</div></div>
+      </div>
+      <div style="margin-top:10px"><div class="print-label">Signature</div>${wtnState.reviewData.sig1?`<img class="sig-img" src="${wtnState.reviewData.sig1}">`:'<span style="color:#999">No signature</span>'}<div style="margin-top:4px;font-size:13px">${sig1Name||""}</div></div>
+    </div>
+
+    <div class="print-section">
+      <h3>${rukLabel}</h3>
+      <div class="print-grid">
+        <div><div class="print-label">Company</div><div class="print-val">${settings.name||"Recyclables UK"}</div></div>
+        <div><div class="print-label">Representative</div><div class="print-val">${settings.rep||"Ian Brown"}</div></div>
+        <div class="full"><div class="print-label">Address</div><div class="print-val">${rukAddress}</div></div>
+        <div><div class="print-label">Waste Carrier Reg</div><div class="print-val">${settings.reg||"—"}</div></div>
+        <div><div class="print-label">Phone</div><div class="print-val">${settings.phone||"—"}</div></div>
+      </div>
+      <div style="margin-top:10px"><div class="print-label">Signature</div>${wtnState.reviewData.sig2?`<img class="sig-img" src="${wtnState.reviewData.sig2}">`:'<span style="color:#999">No signature</span>'}<div style="margin-top:4px;font-size:13px">${sig2Name||""}</div></div>
+    </div>
+
+    <div class="print-section" style="margin-top:30px;font-size:12px;color:#66736b;border-top:2px solid #ddd;padding-top:10px">
+      This Waste Transfer Note has been created digitally by Recyclables UK. Retain for your records.
+    </div>
+  `;
+
+  navTo("wtn-review");
 }
 
 function saveWTN(){
-  if(!reviewData) return;
-  reviewData.status = "saved";
-  var wtns = db("wtns")||[];
-  wtns.push(reviewData);
+  if(!wtnState.reviewData) return;
+  wtnState.reviewData.status = "saved";
+  const wtns = db("wtns")||[];
+  wtns.push(wtnState.reviewData);
   db("wtns",wtns);
-  toast("WTN Saved: "+reviewData.number);
-  setTimeout(function(){resetWTN(); showView("dashboard");},800);
+  toast("WTN Saved: "+wtnState.reviewData.number);
+  setTimeout(()=>{newWTN(); navTo("dashboard");},800);
 }
 
-function resetWTN(){
-  wtnDir = "IN"; wtnStep = 1;
+function newWTN(){
+  wtnState = {direction:"IN",step:1,companyId:"",materials:[],reviewData:null};
   document.getElementById("wtn-date").value = new Date().toISOString().slice(0,10);
   document.getElementById("wtn-time").value = new Date().toTimeString().slice(0,5);
   document.getElementById("wtn-broker").value = "";
   document.getElementById("wtn-broker-reg").value = "";
   document.getElementById("wtn-contact").value = "";
-  document.getElementById("sig1-name").value = "";
-  document.getElementById("sig2-name").value = db("settings")?db("settings").rep||"Ian Brown":"Ian Brown";
+  document.getElementById("sig-party-name").value = "";
+  document.getElementById("sig-ruk-name").value = db("settings")?.rep||"Ian Brown";
   document.getElementById("wtn-materials").innerHTML = "";
-  addMaterial("card");
-  setDir("IN");
-  showStep(1);
+  addWTNMaterial("card");
+  setWTNDirection("IN");
+  goToStep(1);
 }
 
 function viewWTN(id){
-  var wtns = db("wtns")||[];
-  var w = null;
-  for(var i=0;i<wtns.length;i++) if(wtns[i].id===id) w=wtns[i];
+  const w = (db("wtns")||[]).find(x=>x.id===id);
   if(!w) return;
-  var companies = db("companies");
-  var settings = db("settings");
-  var c = null;
-  for(var i=0;i<companies.length;i++) if(companies[i].id===w.companyId) c=companies[i];
-  if(!c) c={};
-  var partyLabel = w.direction==="IN"?"Transferor / Supplier":"Recyclables UK / Transferor";
-  var rukLabel = w.direction==="IN"?"Transferee / Recyclables UK":"Transferee / Customer";
-  var matRows = "";
-  if(w.materials) for(var i=0;i<w.materials.length;i++){var m=w.materials[i];matRows+='<tr><td>'+m.name+'</td><td>'+m.code+'</td><td>'+m.desc+'</td><td style="text-align:right;font-weight:700">'+m.quantity+' kg</td></tr>';}
-  document.getElementById("print-view").innerHTML = 
-    '<div class="no-print" style="margin-bottom:16px"><button class="btn btn-ghost btn-sm" onclick="showView('archive')">&larr; Back</button><div class="row" style="margin-top:10px"><button class="btn btn-secondary" onclick="window.print()">Print / PDF</button><button class="btn btn-secondary" onclick="shareWTN(''+w.id+'')">Share</button><button class="btn btn-danger" onclick="deleteWTN(''+w.id+'')">Delete</button></div></div>'+
-    '<h1>Recyclables UK - Waste Transfer Note</h1>'+
-    '<div class="print-meta">WTN: <b>'+w.number+'</b> | Date: '+w.date+' | Time: '+(w.time||"-")+'</div>'+
-    '<div class="print-section"><h3>Transfer Details</h3><div class="print-grid">'+
-    '<div><div class="print-label">Direction</div><div class="print-val">'+(w.direction==="IN"?"Inbound":"Outbound")+'</div></div>'+
-    '<div><div class="print-label">Vehicle</div><div class="print-val">'+(w.vehicle||"-")+'</div></div>'+
-    '<div><div class="print-label">Contained</div><div class="print-val">'+(w.contained||"-")+'</div></div>'+
-    '<div><div class="print-label">Point</div><div class="print-val">'+(w.transferPoint||"-")+'</div></div>'+
-    '</div></div>'+
-    '<div class="print-section"><h3>Materials</h3><table class="material-table"><tr><th>Material</th><th>LoW/EWC</th><th>Description</th><th style="text-align:right">Qty</th></tr>'+matRows+'<tr style="background:#f5f5f5;font-weight:800"><td colspan="3">TOTAL</td><td style="text-align:right">'+(w.totalKg||0).toLocaleString()+' kg</td></tr></table></div>'+
-    '<div class="print-section"><h3>'+partyLabel+'</h3><div class="print-grid">'+
-    '<div><div class="print-label">Company</div><div class="print-val">'+(c.name||"-")+'</div></div>'+
-    '<div><div class="print-label">Contact</div><div class="print-val">'+(w.contact||c.contact||"-")+'</div></div>'+
-    '<div class="full"><div class="print-label">Address</div><div class="print-val">'+(c.address||"")+(c.postcode?", "+c.postcode:"")+'</div></div>'+
-    '</div><div style="margin-top:10px"><div class="print-label">Signature</div>'+(w.sig1?'<img class="sig-img" src="'+w.sig1+'">':'<span style="color:#999">No signature</span>')+'<div style="margin-top:4px;font-size:13px">'+(w.sig1Name||"")+'</div></div></div>'+
-    '<div class="print-section"><h3>'+rukLabel+'</h3><div class="print-grid">'+
-    '<div><div class="print-label">Company</div><div class="print-val">'+(settings?settings.name||"Recyclables UK":"Recyclables UK")+'</div></div>'+
-    '<div><div class="print-label">Rep</div><div class="print-val">'+(settings?settings.rep||"Ian Brown":"Ian Brown")+'</div></div>'+
-    '<div class="full"><div class="print-label">Address</div><div class="print-val">'+(settings?settings.address||"":"")+'</div></div>'+
-    '<div><div class="print-label">Reg</div><div class="print-val">'+(settings?settings.reg||"-":"-")+'</div></div>'+
-    '</div><div style="margin-top:10px"><div class="print-label">Signature</div>'+(w.sig2?'<img class="sig-img" src="'+w.sig2+'">':'<span style="color:#999">No signature</span>')+'<div style="margin-top:4px;font-size:13px">'+(w.sig2Name||"")+'</div></div></div>';
-  showView("review");
+  // Render into print view and show
+  const companies = db("companies");
+  const settings = db("settings");
+  const c = companies.find(x=>x.id===w.companyId)||{};
+  const partyLabel = w.direction==="IN"?"Transferor / Supplier":"Recyclables UK / Transferor";
+  const rukLabel = w.direction==="IN"?"Transferee / Recyclables UK":"Transferee / Customer";
+  let matRows = (w.materials||[]).map(m=>`<tr><td>${m.name}</td><td>${m.code}</td><td>${m.desc}</td><td style="text-align:right;font-weight:700">${m.quantity} kg</td></tr>`).join("");
+  document.getElementById("wtn-print-view").innerHTML = `
+    <div class="no-print" style="margin-bottom:16px">
+      <button class="btn btn-ghost btn-sm" onclick="navTo('archive')">← Back to Archive</button>
+      <div class="row" style="margin-top:10px">
+        <button class="btn btn-secondary" onclick="window.print()">🖨 Print / PDF</button>
+        <button class="btn btn-secondary" onclick="shareWTN('${w.id}')">📤 Share</button>
+        <button class="btn btn-danger" onclick="deleteWTN('${w.id}')">🗑 Delete</button>
+      </div>
+    </div>
+    <h1>♻️ Recyclables UK — Waste Transfer Note</h1>
+    <div class="print-meta">WTN Number: <b>${w.number}</b> &nbsp;|&nbsp; Date: ${w.date} &nbsp;|&nbsp; Time: ${w.time||"—"}</div>
+    <div class="print-section"><h3>Transfer Details</h3>
+      <div class="print-grid">
+        <div><div class="print-label">Direction</div><div class="print-val">${w.direction==="IN"?"Inbound":"Outbound"}</div></div>
+        <div><div class="print-label">Vehicle</div><div class="print-val">${w.vehicle||"—"}</div></div>
+        <div><div class="print-label">How Contained</div><div class="print-val">${w.contained||"—"}</div></div>
+        <div><div class="print-label">Collection Point</div><div class="print-val">${w.transferPoint||"—"}</div></div>
+      </div>
+    </div>
+    <div class="print-section"><h3>Materials</h3>
+      <table class="material-table"><tr><th>Material</th><th>LoW/EWC</th><th>Description</th><th style="text-align:right">Quantity</th></tr>${matRows}<tr style="background:#f5f5f5;font-weight:800"><td colspan="3">TOTAL</td><td style="text-align:right">${(w.totalKg||0).toLocaleString()} kg</td></tr></table>
+    </div>
+    <div class="print-section"><h3>${partyLabel}</h3>
+      <div class="print-grid">
+        <div><div class="print-label">Company</div><div class="print-val">${c.name||"—"}</div></div>
+        <div><div class="print-label">Contact</div><div class="print-val">${w.contact||c.contact||"—"}</div></div>
+        <div class="full"><div class="print-label">Address</div><div class="print-val">${c.address||""}${c.postcode?", "+c.postcode:""}</div></div>
+      </div>
+      <div style="margin-top:10px"><div class="print-label">Signature</div>${w.sig1?`<img class="sig-img" src="${w.sig1}">`:'<span style="color:#999">No signature</span>'}<div style="margin-top:4px;font-size:13px">${w.sig1Name||""}</div></div>
+    </div>
+    <div class="print-section"><h3>${rukLabel}</h3>
+      <div class="print-grid">
+        <div><div class="print-label">Company</div><div class="print-val">${settings.name||"Recyclables UK"}</div></div>
+        <div><div class="print-label">Representative</div><div class="print-val">${settings.rep||"Ian Brown"}</div></div>
+        <div class="full"><div class="print-label">Address</div><div class="print-val">${settings.address||""}</div></div>
+        <div><div class="print-label">Waste Carrier Reg</div><div class="print-val">${settings.reg||"—"}</div></div>
+      </div>
+      <div style="margin-top:10px"><div class="print-label">Signature</div>${w.sig2?`<img class="sig-img" src="${w.sig2}">`:'<span style="color:#999">No signature</span>'}<div style="margin-top:4px;font-size:13px">${w.sig2Name||""}</div></div>
+    </div>
+  `;
+  navTo("wtn-review");
 }
 
 function deleteWTN(id){
-  if(!confirm("Delete this WTN?")) return;
-  var wtns = db("wtns")||[];
-  var filtered = [];
-  for(var i=0;i<wtns.length;i++) if(wtns[i].id!==id) filtered.push(wtns[i]);
-  db("wtns",filtered);
+  if(!confirm("Delete this WTN permanently?")) return;
+  let wtns = db("wtns")||[];
+  wtns = wtns.filter(w=>w.id!==id);
+  db("wtns",wtns);
   toast("WTN deleted");
-  showView("archive");
+  navTo("archive");
 }
 
 function shareWTN(id){
-  var wtns = db("wtns")||[];
-  var w = null;
-  for(var i=0;i<wtns.length;i++) if(wtns[i].id===id) w=wtns[i];
+  const w = (db("wtns")||[]).find(x=>x.id===id);
   if(!w) return;
-  var text = "WTN "+w.number+" - "+(w.direction==="IN"?"Inbound":"Outbound")+" - "+w.totalKg+"kg";
-  if(navigator.share){navigator.share({title:w.number,text:text}).catch(function(){});}
-  else if(navigator.clipboard){navigator.clipboard.writeText(text); toast("Copied");}
-  else{toast("Save as PDF and share");}
+  const text = `Waste Transfer Note ${w.number} — ${w.direction==="IN"?"Inbound":"Outbound"} — ${w.totalKg}kg — Recyclables UK`;
+  if(navigator.share){navigator.share({title:w.number,text}).catch(()=>{});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(text); toast("WTN details copied");}
+  else{toast("Save as PDF and share manually");}
 }
 
-/* ===== ARCHIVE ===== */
+/* ================= ARCHIVE ================= */
 function renderArchive(){
-  var search = (document.getElementById("archive-search").value||"").toLowerCase();
-  var dirFilter = document.getElementById("archive-dir").value;
-  var dateFilter = document.getElementById("archive-date").value;
-  var companies = db("companies")||[];
-  var wtns = db("wtns")||[];
-  var filtered = [];
-  for(var i=0;i<wtns.length;i++){
-    var w = wtns[i];
-    if(dirFilter && w.direction!==dirFilter) continue;
-    if(dateFilter && w.date!==dateFilter) continue;
+  const search = (document.getElementById("archive-search").value||"").toLowerCase();
+  const dirFilter = document.getElementById("archive-filter-dir").value;
+  const dateFilter = document.getElementById("archive-filter-date").value;
+  const companies = db("companies")||[];
+  let wtns = db("wtns")||[];
+
+  wtns = wtns.filter(w=>{
+    if(dirFilter && w.direction!==dirFilter) return false;
+    if(dateFilter && w.date!==dateFilter) return false;
     if(search){
-      var c = null;
-      for(var j=0;j<companies.length;j++) if(companies[j].id===w.companyId) c=companies[j];
-      var hay = (w.number+" "+(c?c.name:"")+" "+(w.vehicle||"")+" ");
-      if(w.materials) for(var k=0;k<w.materials.length;k++) hay+=w.materials[k].name+" ";
-      if(hay.toLowerCase().indexOf(search)===-1) continue;
+      const c = companies.find(x=>x.id===w.companyId);
+      const hay = (w.number+" "+(c?.name||"")+" "+(w.vehicle||"")+" "+(w.materials||[]).map(m=>m.name).join(" ")).toLowerCase();
+      return hay.includes(search);
     }
-    filtered.push(w);
-  }
-  filtered.sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt)});
-  var el = document.getElementById("archive-list");
-  if(!filtered.length){el.innerHTML='<div class="empty"><div class="icon">📄</div><h3>No WTNs found</h3></div>';return;}
-  var html = "";
-  for(var i=0;i<filtered.length;i++){
-    var w = filtered[i];
-    var c = null;
-    for(var j=0;j<companies.length;j++) if(companies[j].id===w.companyId) c=companies[j];
-    html += '<div class="list-item"><div onclick="viewWTN(''+w.id+'')"><div class="title">'+w.number+'</div><div class="meta">'+w.date+' · '+(w.direction==="IN"?"Inbound":"Outbound")+' · '+w.totalKg+'kg · '+(c?c.name:"Unknown")+'</div></div><div class="actions no-print"><button class="btn btn-sm btn-secondary" onclick="dupWTN(''+w.id+'')">Duplicate</button><button class="btn btn-sm btn-danger" onclick="deleteWTN(''+w.id+'')">Delete</button></div></div>';
-  }
-  el.innerHTML = html;
+    return true;
+  }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+
+  const el = document.getElementById("archive-list");
+  if(!wtns.length){el.innerHTML='<div class="empty"><div class="empty-icon">📄</div><h3>No WTNs found</h3><p>Try adjusting your filters.</p></div>';return}
+
+  el.innerHTML = wtns.map(w=>{
+    const c = companies.find(x=>x.id===w.companyId);
+    return `<div class="list-item">
+      <div class="info" onclick="viewWTN('${w.id}')">
+        <div class="title">${w.number}</div>
+        <div class="meta">${w.date} · ${w.direction==="IN"?"📥 Inbound":"📤 Outbound"} · ${w.totalKg}kg · ${c?.name||"Unknown"} · ${w.vehicle||"No vehicle"}</div>
+      </div>
+      <div class="actions no-print">
+        <button class="btn btn-sm btn-secondary" onclick="dupWTN('${w.id}')">📋</button>
+        <button class="btn btn-sm btn-secondary" onclick="shareWTN('${w.id}')">📤</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteWTN('${w.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join("");
 }
 
-function clearFilters(){
+function clearArchiveFilters(){
   document.getElementById("archive-search").value="";
-  document.getElementById("archive-dir").value="";
-  document.getElementById("archive-date").value="";
+  document.getElementById("archive-filter-dir").value="";
+  document.getElementById("archive-filter-date").value="";
   renderArchive();
 }
 
 function dupWTN(id){
-  var wtns = db("wtns")||[];
-  var w = null;
-  for(var i=0;i<wtns.length;i++) if(wtns[i].id===id) w=wtns[i];
+  const w = (db("wtns")||[]).find(x=>x.id===id);
   if(!w) return;
-  var newW = JSON.parse(JSON.stringify(w));
-  newW.id = "wtn_"+Date.now();
-  newW.date = new Date().toISOString().slice(0,10);
-  newW.time = new Date().toTimeString().slice(0,5);
-  newW.status = "draft";
-  newW.createdAt = new Date().toISOString();
-  var companies = db("companies");
-  var c = null;
-  for(var i=0;i<companies.length;i++) if(companies[i].id===w.companyId) c=companies[i];
-  function slug(s){return (s||"PARTY").toUpperCase().replace(/[^A-Z0-9]+/g,"").slice(0,18)||"PARTY"}
-  var dkey = newW.date.replace(/-/g,"");
-  var allWtns = db("wtns")||[];
-  var prefix = "RUK-"+newW.direction+"-"+slug(c?c.name:"PARTY")+"-"+dkey+"-";
-  var maxNum = 0;
-  for(var i=0;i<allWtns.length;i++){
-    if(allWtns[i].number && allWtns[i].number.indexOf(prefix)===0){
-      var n = parseInt(allWtns[i].number.split("-").pop())||0;
-      if(n>maxNum) maxNum=n;
-    }
-  }
-  newW.number = prefix + String(maxNum+1).padStart(5,"0");
-  var all = db("wtns");
-  all.push(newW);
-  db("wtns",all);
-  toast("Duplicated: "+newW.number);
+  const newW = {...w,id:"wtn_"+Date.now(),date:new Date().toISOString().slice(0,10),time:new Date().toTimeString().slice(0,5),status:"draft",createdAt:new Date().toISOString()};
+  // regenerate number
+  const companies = db("companies");
+  const c = companies.find(x=>x.id===w.companyId);
+  const slug = (s)=>(s||"PARTY").toUpperCase().replace(/[^A-Z0-9]+/g,"").slice(0,18)||"PARTY";
+  const dkey = newW.date.replace(/-/g,"");
+  const allWtns = db("wtns")||[];
+  const prefix = `RUK-${newW.direction}-${slug(c?.name||"PARTY")}-${dkey}-`;
+  const nums = allWtns.filter(x=>x.number?.startsWith(prefix)).map(x=>parseInt(x.number.split("-").pop())||0);
+  newW.number = prefix + String(Math.max(0,...nums)+1).padStart(5,"0");
+  const wtns = db("wtns");
+  wtns.push(newW);
+  db("wtns",wtns);
+  toast("WTN duplicated: "+newW.number);
   renderArchive();
 }
 
-/* ===== COMPANIES ===== */
+/* ================= COMPANIES ================= */
 function renderCompanies(){
-  var search = (document.getElementById("company-search").value||"").toLowerCase();
-  var companies = db("companies")||[];
-  if(search){
-    var filtered = [];
-    for(var i=0;i<companies.length;i++){
-      if(companies[i].name.toLowerCase().indexOf(search)!==-1 || (companies[i].postcode||"").toLowerCase().indexOf(search)!==-1) filtered.push(companies[i]);
-    }
-    companies = filtered;
-  }
-  var el = document.getElementById("companies-list");
-  if(!companies.length){el.innerHTML='<div class="empty"><div class="icon">🏢</div><h3>No companies</h3></div>';return;}
-  var html = "";
-  for(var i=0;i<companies.length;i++){
-    var c = companies[i];
-    html += '<div class="list-item" onclick="showCompanyDetail(''+c.id+'')"><div class="title">'+c.name+'</div><div class="meta">'+(c.contact||"No contact")+' · '+(c.postcode||"No postcode")+' · '+(c.vehicles||[]).length+' vehicles</div></div>';
-  }
-  el.innerHTML = html;
+  const search = (document.getElementById("company-search").value||"").toLowerCase();
+  let companies = db("companies")||[];
+  if(search) companies = companies.filter(c=>c.name.toLowerCase().includes(search)||(c.postcode||"").toLowerCase().includes(search));
+  const el = document.getElementById("companies-list");
+  if(!companies.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏢</div><h3>No companies</h3><p>Add your suppliers and customers.</p></div>';return}
+  el.innerHTML = companies.map(c=>`
+    <div class="list-item" onclick="showCompanyDetail('${c.id}')">
+      <div class="info">
+        <div class="title">${c.name}</div>
+        <div class="meta">${c.contact||"No contact"} · ${c.postcode||"No postcode"} · ${(c.vehicles||[]).length} vehicle(s)</div>
+      </div>
+      <span class="badge badge-saved">${c.pref||"Contact"}</span>
+    </div>
+  `).join("");
 }
 
-function openCompanyModal(id){
-  document.getElementById("co-modal-id").value = id||"";
-  document.getElementById("co-modal-title").textContent = id?"Edit Company":"Add Company";
+function showCompanyModal(id){
+  document.getElementById("company-modal-id").value = id||"";
+  document.getElementById("company-modal-title").textContent = id?"Edit Company":"Add Company";
   if(id){
-    var companies = db("companies")||[];
-    var c = null;
-    for(var i=0;i<companies.length;i++) if(companies[i].id===id) c=companies[i];
+    const c = (db("companies")||[]).find(x=>x.id===id);
     if(c){
       document.getElementById("co-name").value = c.name;
       document.getElementById("co-contact").value = c.contact||"";
@@ -856,27 +1055,24 @@ function openCompanyModal(id){
       document.getElementById("co-postcode").value = c.postcode||"";
       document.getElementById("co-sic").value = c.sic||"";
       document.getElementById("co-notes").value = c.notes||"";
-      setTimeout(function(){if(c.signature) loadSigToCanvas("sig-company",c.signature); else clearSig("sig-company");},100);
+      setTimeout(()=>{if(c.signature) loadSigToCanvas("sig-company",c.signature); else clearSig("sig-company");},100);
     }
   } else {
-    var ids = ["co-name","co-contact","co-mobile","co-email","co-address","co-postcode","co-sic","co-notes"];
-    for(var i=0;i<ids.length;i++) document.getElementById(ids[i]).value="";
+    ["co-name","co-contact","co-mobile","co-email","co-address","co-postcode","co-sic","co-notes"].forEach(id=>document.getElementById(id).value="");
     document.getElementById("co-pref").value="WhatsApp";
     clearSig("sig-company");
   }
   openModal("modal-company");
 }
 
-function saveCompany(){
-  var id = document.getElementById("co-modal-id").value;
-  var name = document.getElementById("co-name").value.trim();
-  if(!name){toast("Company name required");return;}
-  var companies = db("companies")||[];
-  var existing = null;
-  if(id){for(var i=0;i<companies.length;i++) if(companies[i].id===id) existing=companies[i];}
-  var data = {
+function saveCompanyModal(){
+  const id = document.getElementById("company-modal-id").value;
+  const name = document.getElementById("co-name").value.trim();
+  if(!name){toast("Company name is required");return}
+  let companies = db("companies")||[];
+  const data = {
     id: id || "c_"+Date.now(),
-    name:name, contact:document.getElementById("co-contact").value.trim(),
+    name, contact:document.getElementById("co-contact").value.trim(),
     mobile:document.getElementById("co-mobile").value.trim(),
     email:document.getElementById("co-email").value.trim(),
     pref:document.getElementById("co-pref").value,
@@ -884,196 +1080,196 @@ function saveCompany(){
     postcode:document.getElementById("co-postcode").value.trim().toUpperCase(),
     sic:document.getElementById("co-sic").value.trim(),
     notes:document.getElementById("co-notes").value.trim(),
-    vehicles: existing?existing.vehicles||[]:[],
-    signature: getSigData("sig-company")|| (existing?existing.signature:"")
+    vehicles: id ? (companies.find(c=>c.id===id)?.vehicles||[]) : [],
+    signature: getSigData("sig-company")|| (id?companies.find(c=>c.id===id)?.signature:"")
   };
   if(id){
-    var idx = -1;
-    for(var i=0;i<companies.length;i++) if(companies[i].id===id){idx=i;break}
-    if(idx>=0){
-      data.vehicles = companies[idx].vehicles||[];
-      if(!data.signature) data.signature = companies[idx].signature;
-      companies[idx] = data;
-    }
+    const idx = companies.findIndex(c=>c.id===id);
+    if(idx>=0) companies[idx] = {...companies[idx],...data};
   } else {
     companies.push(data);
   }
   db("companies",companies);
   closeModal("modal-company");
-  toast(id?"Updated":"Added");
+  toast(id?"Company updated":"Company added");
   renderCompanies();
 }
 
 function showCompanyDetail(id){
-  var companies = db("companies")||[];
-  var c = null;
-  for(var i=0;i<companies.length;i++) if(companies[i].id===id) c=companies[i];
+  const c = (db("companies")||[]).find(x=>x.id===id);
   if(!c) return;
-  var vels = "";
-  if(c.vehicles && c.vehicles.length){for(var i=0;i<c.vehicles.length;i++) vels += '<span class="chip">'+c.vehicles[i].reg+' <button class="remove" onclick="removeVehicle(''+id+'',''+c.vehicles[i].reg+'')">×</button></span>';}
-  else {vels = '<span style="color:#999;font-size:13px">No vehicles</span>'}
-  var sigHtml = c.signature ? '<img src="'+c.signature+'" style="max-width:200px;max-height:80px;border:1px solid #ddd;padding:4px">' : '<span style="color:#999">No signature</span>';
-  var notesHtml = c.notes?'<div style="margin-top:14px"><label>Notes</label><div style="background:#f9f9f9;padding:10px;border-radius:8px;font-size:14px">'+c.notes+'</div></div>':'';
-  document.getElementById("company-detail-box").innerHTML = 
-    '<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:12px"><h2 style="margin:0">'+c.name+'</h2><div class="no-print"><button class="btn btn-sm btn-secondary" onclick="openCompanyModal(''+c.id+'')">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteCompany(''+c.id+'')">Delete</button></div></div>'+
-    '<div class="grid"><div><label>Contact</label><input value="'+(c.contact||"-")+'" readonly></div><div><label>Mobile</label><input value="'+(c.mobile||"-")+'" readonly></div><div><label>Email</label><input value="'+(c.email||"-")+'" readonly></div><div><label>Preferred</label><input value="'+(c.pref||"-")+'" readonly></div><div class="full"><label>Address</label><textarea rows="2" readonly>'+(c.address||"")+(c.postcode?"
-"+c.postcode:"")+'</textarea></div><div><label>SIC</label><input value="'+(c.sic||"-")+'" readonly></div></div>'+
-    '<div style="margin-top:14px"><label>Vehicles</label><div>'+vels+'</div></div>'+
-    '<div style="margin-top:14px"><label>Signature</label><div>'+sigHtml+'</div></div>'+notesHtml+'</div>';
-  showView("company-detail");
+  const el = document.getElementById("company-detail-content");
+  const vels = (c.vehicles||[]).map(v=>`<span class="chip">${v.reg} <button class="remove" onclick="removeVehicle('${id}','${v.reg}')">×</button></span>`).join("") || '<span style="color:#999;font-size:13px">No vehicles added</span>';
+  const sigHtml = c.signature ? `<img src="${c.signature}" style="max-width:200px;max-height:80px;border:1px solid #ddd;padding:4px">` : '<span style="color:#999">No saved signature</span>';
+  el.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:12px">
+        <h2 style="margin:0">${c.name}</h2>
+        <div class="row no-print">
+          <button class="btn btn-sm btn-secondary" onclick="showCompanyModal('${c.id}')">✏️ Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteCompany('${c.id}')">🗑 Delete</button>
+        </div>
+      </div>
+      <div class="grid">
+        <div><label>Contact</label><input value="${c.contact||"—"}" readonly></div>
+        <div><label>Mobile</label><input value="${c.mobile||"—"}" readonly></div>
+        <div><label>Email</label><input value="${c.email||"—"}" readonly></div>
+        <div><label>Preferred Contact</label><input value="${c.pref||"—"}" readonly></div>
+        <div class="full"><label>Address</label><textarea rows="2" readonly>${c.address||""}${c.postcode?"\n"+c.postcode:""}</textarea></div>
+        <div><label>SIC Code</label><input value="${c.sic||"—"}" readonly></div>
+      </div>
+      <div style="margin-top:14px"><label>Vehicles</label><div>${vels}</div></div>
+      <div style="margin-top:14px"><label>Authorised Signature</label><div>${sigHtml}</div></div>
+      ${c.notes?`<div style="margin-top:14px"><label>Notes</label><div style="background:#f9f9f9;padding:10px;border-radius:8px;font-size:14px">${c.notes}</div></div>`:""}
+    </div>
+  `;
+  navTo("company-detail");
 }
 
 function removeVehicle(cid,reg){
-  var companies = db("companies");
-  var c = null;
-  for(var i=0;i<companies.length;i++) if(companies[i].id===cid) c=companies[i];
-  if(c){c.vehicles = (c.vehicles||[]).filter(function(v){return v.reg!==reg}); db("companies",companies);}
+  let companies = db("companies");
+  const c = companies.find(x=>x.id===cid);
+  if(c){c.vehicles = (c.vehicles||[]).filter(v=>v.reg!==reg); db("companies",companies);}
   showCompanyDetail(cid);
-  toast("Removed");
+  toast("Vehicle removed");
 }
 
 function deleteCompany(id){
-  if(!confirm("Delete company?")) return;
-  var companies = db("companies");
-  var filtered = [];
-  for(var i=0;i<companies.length;i++) if(companies[i].id!==id) filtered.push(companies[i]);
-  db("companies",filtered);
-  toast("Deleted");
-  showView("companies");
+  if(!confirm("Delete this company and all its data?")) return;
+  let companies = db("companies").filter(c=>c.id!==id);
+  db("companies",companies);
+  toast("Company deleted");
+  navTo("companies");
 }
 
-/* ===== STOCK ===== */
+/* ================= STOCK ================= */
 function renderStock(){
-  var wtns = db("wtns")||[];
-  var stock = {};
-  for(var k in MATS) stock[k]={name:MATS[k].name,code:MATS[k].code,desc:MATS[k].desc,total:0};
-  for(var i=0;i<wtns.length;i++){
-    var w = wtns[i];
-    if(w.status!=="saved" || !w.materials) continue;
-    for(var j=0;j<w.materials.length;j++){
-      var m = w.materials[j];
+  const wtns = db("wtns")||[];
+  const stock = {};
+  Object.keys(MATS).forEach(k=>stock[k]={...MATS[k],total:0});
+  wtns.filter(w=>w.status==="saved").forEach(w=>{
+    (w.materials||[]).forEach(m=>{
       if(!stock[m.key]) stock[m.key]={name:m.name,code:m.code,desc:m.desc,total:0};
       if(w.direction==="IN") stock[m.key].total += m.quantity||0;
       else stock[m.key].total -= m.quantity||0;
-    }
-  }
-  var el = document.getElementById("stock-list");
-  var items = [];
-  for(var k in stock){if(stock[k].total!==0) items.push(stock[k])}
-  items.sort(function(a,b){return b.total-a.total});
-  if(!items.length){el.innerHTML='<div class="empty"><div class="icon">📦</div><h3>No stock data</h3></div>';return;}
-  var html = "";
-  for(var i=0;i<items.length;i++){
-    var s = items[i];
-    html += '<div class="stock-card"><div class="stock-icon">📦</div><div class="stock-info"><div class="stock-name">'+s.name+'</div><div class="stock-code">'+s.code+'</div></div><div class="stock-qty"><div class="stock-val">'+s.total.toLocaleString()+'</div><div class="stock-unit">kg</div></div></div>';
-  }
-  el.innerHTML = html;
+    });
+  });
+  const el = document.getElementById("stock-list");
+  const items = Object.values(stock).filter(s=>s.total!==0).sort((a,b)=>b.total-a.total);
+  if(!items.length){el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><h3>No stock data</h3><p>Create inbound and outbound WTNs to track stock.</p></div>';return}
+  el.innerHTML = items.map(s=>`
+    <div class="stock-card">
+      <div class="stock-icon">📦</div>
+      <div class="stock-info">
+        <div class="stock-name">${s.name}</div>
+        <div class="stock-code">${s.code}</div>
+      </div>
+      <div class="stock-qty">
+        <div class="stock-val">${s.total.toLocaleString()}</div>
+        <div class="stock-unit">kg</div>
+      </div>
+    </div>
+  `).join("");
 }
 
-/* ===== SETTINGS ===== */
+/* ================= SETTINGS ================= */
 function loadSettings(){
-  var s = db("settings")||DEFAULT_SETTINGS;
+  const s = db("settings")||DEFAULT_SETTINGS;
   document.getElementById("set-name").value = s.name||"";
   document.getElementById("set-rep").value = s.rep||"";
   document.getElementById("set-address").value = s.address||"";
   document.getElementById("set-reg").value = s.reg||"";
   document.getElementById("set-phone").value = s.phone||"";
   document.getElementById("set-email").value = s.email||"";
-  setTimeout(function(){if(s.signature) loadSigToCanvas("sig-settings",s.signature);},100);
+  setTimeout(()=>{if(s.signature) loadSigToCanvas("sig-settings",s.signature);},100);
 }
 
 function saveSettings(){
-  var s = {
+  const s = {
     name:document.getElementById("set-name").value.trim(),
     rep:document.getElementById("set-rep").value.trim(),
     address:document.getElementById("set-address").value.trim(),
     reg:document.getElementById("set-reg").value.trim(),
     phone:document.getElementById("set-phone").value.trim(),
     email:document.getElementById("set-email").value.trim(),
-    signature:getSigData("sig-settings")||(db("settings")?db("settings").signature:"")
+    signature:getSigData("sig-settings")||db("settings")?.signature
   };
   db("settings",s);
-  toast("Saved");
+  toast("Settings saved");
 }
 
 function exportData(){
-  var data = {settings:db("settings"), companies:db("companies"), wtns:db("wtns"), exportedAt:new Date().toISOString()};
-  var blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement("a");
-  a.href = url; a.download = "RUK_Backup_"+new Date().toISOString().slice(0,10)+".json";
+  const data = {
+    settings:db("settings"), companies:db("companies"), wtns:db("wtns"),
+    exportedAt:new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "RecyclablesUK_Backup_"+new Date().toISOString().slice(0,10)+".json";
   a.click(); URL.revokeObjectURL(url);
-  toast("Exported");
+  toast("Data exported");
 }
 
-/* ===== SIGNATURES ===== */
+/* ================= SIGNATURES ================= */
 function initSig(id){
-  var c = document.getElementById(id);
+  const c = document.getElementById(id);
   if(!c) return;
-  var ctx = c.getContext("2d");
+  const ctx = c.getContext("2d");
   c.width = c.clientWidth*2; c.height = c.clientHeight*2;
   ctx.scale(2,2); ctx.lineWidth=2; ctx.lineCap="round"; ctx.lineJoin="round";
-  var down=false;
-  function getPos(e){
-    var r=c.getBoundingClientRect();
-    var cx=e.clientX, cy=e.clientY;
-    if(e.touches && e.touches.length>0){cx=e.touches[0].clientX;cy=e.touches[0].clientY}
-    return{x:cx-r.left,y:cy-r.top}
-  }
-  function start(e){e.preventDefault();down=true;var p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}
-  function move(e){e.preventDefault();if(!down)return;var p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();}
-  function end(e){e.preventDefault();down=false;}
-  c.addEventListener("pointerdown",start);
-  c.addEventListener("pointermove",move);
-  c.addEventListener("pointerup",end);
-  c.addEventListener("touchstart",start,{passive:false});
-  c.addEventListener("touchmove",move,{passive:false});
-  c.addEventListener("touchend",end,{passive:false});
+  let down=false;
+  const pos = e=>{const r=c.getBoundingClientRect();return{x:(e.clientX||e.touches?.[0]?.clientX)-r.left,y:(e.clientY||e.touches?.[0]?.clientY)-r.top}};
+  c.onpointerdown = e=>{down=true;c.setPointerCapture(e.pointerId);const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);};
+  c.onpointermove = e=>{if(!down)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();};
+  c.onpointerup = ()=>down=false;
 }
 
 function clearSig(id){
-  var c = document.getElementById(id);
+  const c = document.getElementById(id);
   if(!c) return;
-  c.getContext("2d").clearRect(0,0,c.width,c.height);
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
 }
 
 function getSigData(id){
-  var c = document.getElementById(id);
+  const c = document.getElementById(id);
   if(!c) return "";
-  var blank = document.createElement("canvas");
+  // Check if empty
+  const blank = document.createElement("canvas");
   blank.width=c.width; blank.height=c.height;
   if(c.toDataURL()===blank.toDataURL()) return "";
   return c.toDataURL("image/png");
 }
 
 function loadSigToCanvas(id,data){
-  var c = document.getElementById(id);
+  const c = document.getElementById(id);
   if(!c||!data) return;
-  var ctx = c.getContext("2d");
-  var img = new Image();
-  img.onload = function(){ctx.clearRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width/2,c.height/2);};
+  const ctx = c.getContext("2d");
+  const img = new Image();
+  img.onload = ()=>{ctx.clearRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width/2,c.height/2);};
   img.src = data;
 }
 
-/* ===== UTILS ===== */
-function companyName(id){
-  var companies = db("companies")||[];
-  for(var i=0;i<companies.length;i++) if(companies[i].id===id) return companies[i].name;
-  return "Unknown";
-}
-function toast(msg){
-  var t=document.getElementById("toast");
-  t.textContent=msg; t.classList.add("show");
-  setTimeout(function(){t.classList.remove("show")},2500);
-}
+/* ================= UTILS ================= */
+function companyName(id){const c=(db("companies")||[]).find(x=>x.id===id);return c?.name||"Unknown"}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
 function openModal(id){document.getElementById(id).classList.add("show");}
 function closeModal(id){document.getElementById(id).classList.remove("show");}
 
-/* ===== INIT ===== */
+/* ================= INIT ================= */
 initDB();
-resetWTN();
+newWTN();
 renderDashboard();
-setTimeout(function(){initSig("sig-settings");initSig("sig-company");},500);
+
+// Init all signature canvases when their containers are visible
+setTimeout(()=>{initSig("sig-settings");initSig("sig-company");},500);
+
+// Handle back button
+window.onpopstate = function(){
+  if(currentPage==="wtn-review") navTo("archive");
+  else if(currentPage==="company-detail") navTo("companies");
+};
 </script>
 </body>
 </html>
