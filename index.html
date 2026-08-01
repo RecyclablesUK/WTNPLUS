@@ -30,7 +30,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-10px)}80%{transform:translateX(10px)}}
 
 /* App */
-#app-container{min-height:100vh;display:flex;flex-direction:column}
+#app-container{min-height:100vh;display:none;flex-direction:column}
 header{background:#2d5a27;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
 header .brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:600}
 header .brand .icon{font-size:24px}
@@ -104,10 +104,10 @@ header button:active{background:rgba(255,255,255,0.3)}
 .wtn-item{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border-left:4px solid #2d5a27}
 .wtn-item.outbound{border-left-color:#ed6c02}
 .wtn-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.wtn-id{font-weight:700;font-size:15px;color:#2d5a27}
+.wtn-ref{font-weight:700;font-size:15px;color:#2d5a27;font-family:monospace;letter-spacing:0.5px}
 .wtn-date{font-size:12px;color:#888}
 .wtn-details{font-size:13px;color:#666}
-.wtn-actions{display:flex;gap:8px;margin-top:10px}
+.wtn-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .wtn-actions button{padding:6px 10px;border:none;border-radius:8px;font-size:12px;cursor:pointer;background:#f5f5f5}
 
 /* Stock */
@@ -132,6 +132,10 @@ header button:active{background:rgba(255,255,255,0.3)}
 /* Toast */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:#333;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;opacity:0;transition:all .3s;z-index:10001;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Search */
+.search-box{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;background:#fafafa;margin-bottom:12px}
+.search-box:focus{outline:none;border-color:#2d5a27;background:#fff}
 
 /* Print/PDF */
 @media print{header,#tabs,.btn,.wtn-actions{display:none!important}#content{padding:0}.tab-content{display:none!important}.tab-content.active{display:block!important}}
@@ -261,6 +265,11 @@ header button:active{background:rgba(255,255,255,0.3)}
 <!-- Step 2 -->
 <div id="wizard-2" style="display:none">
 <div class="form-group">
+<label>Reference Number</label>
+<input type="text" id="wtn-ref" placeholder="Auto-generated on save" readonly style="background:#f0f0f0;color:#666">
+<p style="font-size:12px;color:#888;margin-top:4px">Format: RUK-IN/OUT-{COMPANY}-{DATE}-{SEQUENCE}</p>
+</div>
+<div class="form-group">
 <label>Vehicle Registration</label>
 <input type="text" id="wtn-vehicle" placeholder="e.g. AB12 CDE">
 </div>
@@ -328,7 +337,12 @@ header button:active{background:rgba(255,255,255,0.3)}
 <!-- ARCHIVE -->
 <div id="tab-archive" class="tab-content">
 <div class="card">
-<h3>📄 All WTNs</h3>
+<input type="text" class="search-box" id="archive-search" placeholder="🔍 Search by ref, company, vehicle, material..." oninput="renderArchive()">
+<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+<button class="btn btn-secondary" style="flex:1;min-width:100px;margin-bottom:0;font-size:13px;padding:8px" onclick="filterArchive('all')">All</button>
+<button class="btn btn-secondary" style="flex:1;min-width:100px;margin-bottom:0;font-size:13px;padding:8px" onclick="filterArchive('inbound')">Inbound</button>
+<button class="btn btn-secondary" style="flex:1;min-width:100px;margin-bottom:0;font-size:13px;padding:8px" onclick="filterArchive('outbound')">Outbound</button>
+</div>
 <div id="all-wtns"><div class="empty"><div class="icon">📄</div><p>No WTNs saved yet</p></div></div>
 </div>
 </div>
@@ -499,15 +513,16 @@ return JSON.parse(new TextDecoder().decode(dec));
 }
 
 // ===================== STATE =====================
-let appData = {wtns:[], companies:[], settings:{}, alerts:{}, stock:{}};
+let appData = {wtns:[], companies:[], settings:{}, alerts:{}, stock:{}, refCounters:{}};
 let currentPIN = '';
-let pinMode = 'unlock'; // 'unlock' | 'setup' | 'confirm'
+let pinMode = 'unlock';
 let pinTemp = '';
 let currentStep = 1;
 let wtnDraft = {direction:'inbound', materials:[]};
+let archiveFilter = 'all';
 let signaturePad, sigCtx;
 let inactivityTimer;
-const AUTO_LOCK_MS = 5 * 60 * 1000; // 5 minutes
+const AUTO_LOCK_MS = 5 * 60 * 1000;
 
 // ===================== PIN UI =====================
 function pinInput(n){
@@ -552,7 +567,6 @@ document.getElementById('pin-subtitle').textContent = 'Choose a 4-digit PIN to s
 }
 return;
 }
-// unlock
 const hash = await hashPIN(pin);
 const storedHash = localStorage.getItem('wtnplus_pin_hash');
 if(hash !== storedHash){currentPIN='';updatePinDots();showPinError('Incorrect PIN');return;}
@@ -568,7 +582,6 @@ unlockApp();
 async function finalizeSetup(pin){
 const hash = await hashPIN(pin);
 localStorage.setItem('wtnplus_pin_hash', hash);
-// Migrate old data if present
 const old = migrateOldData();
 if(old) Object.assign(appData, old);
 await saveVault(pin);
@@ -584,7 +597,6 @@ const settings = localStorage.getItem('wtnplus_settings');
 if(companies) old.companies = JSON.parse(companies);
 if(wtns) old.wtns = JSON.parse(wtns);
 if(settings) old.settings = JSON.parse(settings);
-// Clean old keys
 localStorage.removeItem('wtnplus_companies');
 localStorage.removeItem('wtnplus_wtns');
 localStorage.removeItem('wtnplus_settings');
@@ -651,6 +663,19 @@ if(tab==='stock') renderStock();
 if(tab==='settings') loadSettings();
 }
 
+// ===================== REF GENERATOR =====================
+function generateRef(direction, companyName){
+const prefix = direction === 'inbound' ? 'RUK-IN' : 'RUK-OUT';
+const coShort = companyName ? companyName.replace(/[^a-zA-Z0-9]/g,'').toUpperCase().substring(0,8) : 'UNKNOWN';
+const dateStr = new Date().toISOString().split('T')[0].replace(/-/g,'');
+const key = prefix + '-' + coShort + '-' + dateStr;
+if(!appData.refCounters) appData.refCounters = {};
+if(!appData.refCounters[key]) appData.refCounters[key] = 0;
+appData.refCounters[key]++;
+const seq = String(appData.refCounters[key]).padStart(3,'0');
+return prefix + '-' + coShort + '-' + dateStr + '-' + seq;
+}
+
 // ===================== HOME =====================
 function renderHome(){
 const today = new Date().toISOString().split('T')[0];
@@ -675,11 +700,12 @@ function renderWtnCard(w){
 const total = w.materials.reduce((s,m)=>s+(parseFloat(m.weight)||0),0);
 const matList = w.materials.map(m=>m.type).join(', ') || 'No materials';
 return `<div class="wtn-item ${w.direction}">
-<div class="wtn-header"><span class="wtn-id">#${w.id}</span><span class="wtn-date">${formatDate(w.date)}</span></div>
+<div class="wtn-header"><span class="wtn-ref">${w.ref || w.id}</span><span class="wtn-date">${formatDate(w.date)}</span></div>
 <div class="wtn-details">${w.company} • ${matList} • ${total}kg</div>
 <div class="wtn-actions">
 <button onclick="printWTN('${w.id}')">🖨️ Print</button>
 <button onclick="shareWTN('${w.id}')">📤 Share</button>
+<button onclick="duplicateWTN('${w.id}')">📋 Copy</button>
 <button onclick="deleteWTN('${w.id}')" style="color:#c62828">🗑️</button>
 </div>
 </div>`;
@@ -699,6 +725,15 @@ document.getElementById('step-'+currentStep).classList.add('completed');
 document.getElementById('step-'+n).classList.add('active');
 currentStep=n;
 if(n===4) initSignature();
+if(n===2){
+// Pre-generate ref preview
+const companyName = document.getElementById('wtn-company');
+const selected = companyName.options[companyName.selectedIndex]?.text || '';
+if(selected && selected !== 'Select company...'){
+const previewRef = generateRef(wtnDraft.direction, selected);
+document.getElementById('wtn-ref').value = previewRef + ' (will confirm on save)';
+}
+}
 }
 function prevStep(n){
 document.getElementById('wizard-'+currentStep).style.display='none';
@@ -738,19 +773,25 @@ c.addEventListener('touchend',()=>drawing=false);
 function clearSignature(){if(sigCtx){const c=document.getElementById('signature-pad');sigCtx.clearRect(0,0,c.width,c.height);}}
 
 async function saveWTN(){
-const company = document.getElementById('wtn-company').value;
-if(!company){toast('Please select a company');return;}
+const companySel = document.getElementById('wtn-company');
+const companyId = companySel.value;
+const companyName = companySel.options[companySel.selectedIndex]?.text || '';
+if(!companyId || companyName==='Select company...'){toast('Please select a company');return;}
 const materials = [];
-document.querySelectorAll('#materials-list > div, #materials-list').forEach(el=>{
-const type = el.querySelector('.mat-type')?.value;
-const weight = parseFloat(el.querySelector('.mat-weight')?.value);
+document.querySelectorAll('#materials-list .mat-type').forEach((sel,idx)=>{
+const type = sel.value;
+const weightEl = document.querySelectorAll('#materials-list .mat-weight')[idx];
+const weight = parseFloat(weightEl?.value);
 if(type && weight) materials.push({type,weight});
 });
 if(!materials.length){toast('Please add at least one material');return;}
+const ref = generateRef(wtnDraft.direction, companyName);
 const wtn = {
 id: 'WTN-' + Date.now(),
+ref: ref,
 direction: wtnDraft.direction,
-company: company,
+company: companyName,
+companyId: companyId,
 contact: document.getElementById('wtn-contact').value,
 vehicle: document.getElementById('wtn-vehicle').value,
 driver: document.getElementById('wtn-driver').value,
@@ -768,7 +809,7 @@ if(wtn.direction==='inbound') appData.stock[key].qty += m.weight;
 else appData.stock[key].qty = Math.max(0, appData.stock[key].qty - m.weight);
 });
 await saveVault();
-toast('WTN saved successfully');
+toast('WTN saved: ' + ref);
 resetWizard();
 switchTab('home');
 renderHome();
@@ -780,6 +821,7 @@ document.getElementById('step-1').classList.add('active');
 ['wizard-1','wizard-2','wizard-3','wizard-4'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
 document.getElementById('wtn-company').value='';
 document.getElementById('wtn-contact').value='';
+document.getElementById('wtn-ref').value='';
 document.getElementById('wtn-vehicle').value='';
 document.getElementById('wtn-driver').value='';
 document.getElementById('wtn-datetime').value='';
@@ -793,19 +835,46 @@ appData.wtns = appData.wtns.filter(w=>w.id!==id);
 saveVault();
 renderHome(); renderArchive();
 }
+function duplicateWTN(id){
+const w = appData.wtns.find(x=>x.id===id);
+if(!w) return;
+const companySel = document.getElementById('wtn-company');
+companySel.value = w.companyId || '';
+document.getElementById('wtn-contact').value = w.contact || '';
+document.getElementById('wtn-vehicle').value = w.vehicle || '';
+document.getElementById('wtn-driver').value = w.driver || '';
+document.getElementById('wtn-notes').value = w.notes || '';
+setDirection(w.direction);
+// Populate materials
+const list = document.getElementById('materials-list');
+list.innerHTML = '';
+w.materials.forEach((m,idx)=>{
+if(idx===0){
+list.innerHTML = `<div class="form-group"><label>Material</label><select class="mat-type"><option value="">Select material...</option><option ${m.type==='Cardboard'?'selected':''}>Cardboard</option><option ${m.type==='Plastic'?'selected':''}>Plastic</option><option ${m.type==='Wood/Pallets'?'selected':''}>Wood/Pallets</option><option ${m.type==='Metal'?'selected':''}>Metal</option><option ${m.type==='Paper'?'selected':''}>Paper</option><option ${m.type==='General Waste'?'selected':''}>General Waste</option><option ${m.type==='Other'?'selected':''}>Other</option></select></div><div class="form-group"><label>Weight (kg)</label><input type="number" class="mat-weight" placeholder="0" min="0" step="0.1" value="${m.weight}"></div>`;
+}else{
+const div = document.createElement('div');
+div.innerHTML = `<div class="form-group"><label>Material</label><select class="mat-type"><option value="">Select material...</option><option ${m.type==='Cardboard'?'selected':''}>Cardboard</option><option ${m.type==='Plastic'?'selected':''}>Plastic</option><option ${m.type==='Wood/Pallets'?'selected':''}>Wood/Pallets</option><option ${m.type==='Metal'?'selected':''}>Metal</option><option ${m.type==='Paper'?'selected':''}>Paper</option><option ${m.type==='General Waste'?'selected':''}>General Waste</option><option ${m.type==='Other'?'selected':''}>Other</option></select></div><div class="form-group"><label>Weight (kg)</label><input type="number" class="mat-weight" placeholder="0" min="0" step="0.1" value="${m.weight}"></div>`;
+list.appendChild(div);
+}
+});
+switchTab('newwtn');
+nextStep(2);
+toast('WTN copied — review and save');
+}
 function printWTN(id){
 const w = appData.wtns.find(x=>x.id===id);
 if(!w) return;
+const s = appData.settings || {};
 const win = window.open('','_blank');
-win.document.write(`<html><head><title>WTN ${w.id}</title><style>body{font-family:Arial;padding:40px}h1{color:#2d5a27}table{width:100%;border-collapse:collapse;margin:20px 0}td,th{border:1px solid #ccc;padding:10px;text-align:left}</style></head><body><h1>♻️ Waste Transfer Note</h1><p><strong>ID:</strong> ${w.id}</p><p><strong>Date:</strong> ${formatDate(w.date)}</p><p><strong>Direction:</strong> ${w.direction}</p><p><strong>Company:</strong> ${w.company}</p><p><strong>Contact:</strong> ${w.contact||'N/A'}</p><p><strong>Vehicle:</strong> ${w.vehicle||'N/A'}</p><p><strong>Driver:</strong> ${w.driver||'N/A'}</p><h3>Materials</h3><table><tr><th>Material</th><th>Weight (kg)</th></tr>${w.materials.map(m=>`<tr><td>${m.type}</td><td>${m.weight}</td></tr>`).join('')}</table><p><strong>Notes:</strong> ${w.notes||'None'}</p><p style="margin-top:40px"><strong>Signature:</strong><br><img src="${w.signature}" style="max-width:300px;border:1px solid #ccc"></p></body></html>`);
+win.document.write(`<html><head><title>WTN ${w.ref}</title><style>body{font-family:Arial;padding:40px;max-width:800px;margin:0 auto}h1{color:#2d5a27;border-bottom:3px solid #2d5a27;padding-bottom:10px}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px}.logo{font-size:32px;font-weight:bold;color:#2d5a27}table{width:100%;border-collapse:collapse;margin:20px 0}td,th{border:1px solid #ccc;padding:10px;text-align:left}th{background:#f5f5f5}.ref-box{background:#2d5a27;color:#fff;padding:10px 20px;border-radius:8px;font-size:18px;font-weight:bold;font-family:monospace}.signature-box{border:2px solid #ccc;padding:20px;margin-top:20px;text-align:center}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #ccc;font-size:12px;color:#666}</style></head><body><div class="header"><div class="logo">♻️ Recyclables UK</div><div class="ref-box">${w.ref}</div></div><h1>Waste Transfer Note</h1><table><tr><td><strong>Direction:</strong></td><td>${w.direction.toUpperCase()}</td><td><strong>Date:</strong></td><td>${formatDate(w.date)}</td></tr><tr><td><strong>Company:</strong></td><td>${w.company}</td><td><strong>Contact:</strong></td><td>${w.contact||'N/A'}</td></tr><tr><td><strong>Vehicle:</strong></td><td>${w.vehicle||'N/A'}</td><td><strong>Driver:</strong></td><td>${w.driver||'N/A'}</td></tr></table><h3>Materials</h3><table><tr><th>Material</th><th>Weight (kg)</th></tr>${w.materials.map(m=>`<tr><td>${m.type}</td><td>${m.weight}</td></tr>`).join('')}<tr style="font-weight:bold;background:#f5f5f5"><td>Total</td><td>${w.materials.reduce((s,m)=>s+m.weight,0)} kg</td></tr></table><p><strong>Notes:</strong> ${w.notes||'None'}</p><div class="signature-box"><p><strong>Customer Signature</strong></p><img src="${w.signature}" style="max-width:300px;max-height:120px"></div><div class="footer"><p><strong>${s.name||'Recyclables UK'}</strong></p><p>${s.address||''}</p><p>Waste Carrier Reg: ${s.reg||'N/A'} | Tel: ${s.phone||'N/A'} | Email: ${s.email||'N/A'}</p><p>Representative: ${s.rep||'N/A'}</p></div></body></html>`);
 win.document.close(); win.print();
 }
 function shareWTN(id){
 const w = appData.wtns.find(x=>x.id===id);
 if(!w) return;
 const total = w.materials.reduce((s,m)=>s+m.weight,0);
-const text = `WTN ${w.id}\n${w.direction.toUpperCase()} - ${w.company}\nDate: ${formatDate(w.date)}\nMaterials: ${w.materials.map(m=>m.type+' '+m.weight+'kg').join(', ')}\nTotal: ${total}kg`;
-if(navigator.share){navigator.share({title:'WTN '+w.id, text});}
+const text = `WTN ${w.ref}\n${w.direction.toUpperCase()} - ${w.company}\nDate: ${formatDate(w.date)}\nVehicle: ${w.vehicle||'N/A'}\nDriver: ${w.driver||'N/A'}\nMaterials: ${w.materials.map(m=>m.type+' '+m.weight+'kg').join(', ')}\nTotal: ${total}kg\nNotes: ${w.notes||'None'}`;
+if(navigator.share){navigator.share({title:'WTN '+w.ref, text});}
 else{navigator.clipboard.writeText(text); toast('WTN details copied');}
 }
 
@@ -818,10 +887,10 @@ if(!list.length){container.innerHTML='<div class="empty"><div class="icon">🏢<
 container.innerHTML = list.map(c=>`<div class="company-card">
 <div class="company-info">
 <h4>${c.name}</h4>
-<p>${c.contact||'No contact'} • ${c.postcode||'No postcode'} • ${c.vehicles||0} vehicle(s)</p>
+<p>${c.contact||'No contact'} • ${c.postcode||'No postcode'}</p>
 </div>
 <div class="company-actions">
-${c.pref==='whatsapp'||c.phone?`<button class="btn-wa" onclick="contactCompany('${c.id}','wa')">WhatsApp</button>`:''}
+${c.phone?`<button class="btn-wa" onclick="contactCompany('${c.id}','wa')">WhatsApp</button>`:''}
 ${c.email?`<button class="btn-email" onclick="contactCompany('${c.id}','email')">Email</button>`:''}
 </div>
 </div>`).join('');
@@ -841,15 +910,13 @@ contact: document.getElementById('newco-contact').value,
 postcode: document.getElementById('newco-postcode').value,
 phone: document.getElementById('newco-phone').value,
 email: document.getElementById('newco-email').value,
-pref: document.getElementById('newco-pref').value,
-vehicles: 0
+pref: document.getElementById('newco-pref').value
 };
 appData.companies.push(co);
 await saveVault();
 closeModal();
 renderCompanies();
 toast('Company added');
-// Clear form
 document.getElementById('newco-name').value='';
 document.getElementById('newco-contact').value='';
 document.getElementById('newco-postcode').value='';
@@ -864,10 +931,20 @@ if(type==='email' && c.email){window.open('mailto:'+c.email,'_blank');}
 }
 
 // ===================== ARCHIVE =====================
+function filterArchive(dir){archiveFilter=dir;renderArchive();}
 function renderArchive(){
+const search = document.getElementById('archive-search')?.value.toLowerCase()||'';
+let list = appData.wtns.slice().reverse();
+if(archiveFilter !== 'all') list = list.filter(w=>w.direction===archiveFilter);
+if(search){
+list = list.filter(w=>{
+const text = (w.ref+' '+w.company+' '+(w.vehicle||'')+' '+w.materials.map(m=>m.type).join(' ')).toLowerCase();
+return text.includes(search);
+});
+}
 const container = document.getElementById('all-wtns');
-if(!appData.wtns.length){container.innerHTML='<div class="empty"><div class="icon">📄</div><p>No WTNs saved yet</p></div>';return;}
-container.innerHTML = appData.wtns.slice().reverse().map(w=>renderWtnCard(w)).join('');
+if(!list.length){container.innerHTML='<div class="empty"><div class="icon">📄</div><p>No WTNs found</p></div>';return;}
+container.innerHTML = list.map(w=>renderWtnCard(w)).join('');
 }
 
 // ===================== STOCK =====================
@@ -942,7 +1019,7 @@ toast('Backup downloaded');
 async function clearAllData(){
 if(!confirm('DELETE ALL DATA? This cannot be undone!')) return;
 if(!confirm('Are you absolutely sure? All WTNs, companies and settings will be lost.')) return;
-appData = {wtns:[], companies:[], settings:{}, alerts:{}, stock:{}};
+appData = {wtns:[], companies:[], settings:{}, alerts:{}, stock:{}, refCounters:{}};
 localStorage.removeItem('wtnplus_vault');
 localStorage.removeItem('wtnplus_pin_hash');
 toast('All data cleared');
