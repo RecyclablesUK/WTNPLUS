@@ -1,1275 +1,982 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#1f5f3a">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WTN+">
+<meta name="theme-color" content="#2d5a27">
 <title>Recyclables UK Manager</title>
 <style>
-:root{
-  --g:#1f5f3a;--g2:#2d7a52;--g3:#e8f5ee;--bg:#f4f7f5;--b:#d9dfdb;--m:#66736b;
-  --danger:#c0392b;--warn:#f39c12;--shadow:0 2px 8px rgba(0,0,0,.08);
-  --radius:14px;--radius-sm:10px;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:#172019;overflow:hidden}
-#app{height:100%;display:flex;flex-direction:column}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;color:#333;overflow-x:hidden}
 
-/* Header */
-header{background:var(--g);color:#fff;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:10;flex-shrink:0}
-header h1{margin:0;font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
-header .menu-btn{background:none;border:none;color:#fff;font-size:22px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+/* PIN Screen */
+#pin-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#2d5a27 0%,#1a3a18 100%);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+#pin-screen .logo{font-size:48px;margin-bottom:10px}
+#pin-screen h2{color:#fff;font-size:22px;margin-bottom:8px;text-align:center}
+#pin-screen p{color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:30px;text-align:center;max-width:300px}
+#pin-dots{display:flex;gap:15px;margin-bottom:30px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,0.4);transition:all .2s}
+.pin-dot.filled{background:#fff;border-color:#fff}
+.pin-dot.error{border-color:#ff4444;background:#ff4444}
+#pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;width:260px}
+.pin-key{width:70px;height:70px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .1s;-webkit-touch-callout:none}
+.pin-key:active{background:rgba(255,255,255,0.25);transform:scale(0.95)}
+.pin-key.wide{grid-column:span 2;width:auto;border-radius:35px;font-size:16px}
+#pin-error{color:#ff6b6b;font-size:13px;margin-top:20px;height:20px;text-align:center}
+#pin-screen.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-10px)}80%{transform:translateX(10px)}}
 
-/* Drawer */
-#drawer{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;transition:opacity .2s}
-#drawer.open{pointer-events:auto;opacity:1}
-#drawer .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4)}
-#drawer .panel{position:absolute;left:0;top:0;bottom:0;width:280px;background:#fff;transform:translateX(-100%);transition:transform .25s ease;display:flex;flex-direction:column}
-#drawer.open .panel{transform:translateX(0)}
-#drawer .panel-head{background:var(--g);color:#fff;padding:20px 16px;font-size:18px;font-weight:700}
-#drawer .panel-nav{flex:1;overflow:auto;padding:8px 0}
-#drawer .nav-item{display:flex;align-items:center;gap:12px;padding:14px 16px;font-size:15px;color:#333;cursor:pointer;border-left:4px solid transparent}
-#drawer .nav-item:hover{background:#f5f5f5}
-#drawer .nav-item.active{border-left-color:var(--g);background:var(--g3);color:var(--g);font-weight:700}
-#drawer .nav-icon{width:24px;text-align:center;font-size:18px}
-
-/* Main content */
-main{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
-.page{display:none}
-.page.active{display:block;animation:fadeIn .2s}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* Cards */
-.card{background:#fff;border:1px solid var(--b);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
-.card h2{font-size:17px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
-.card h3{font-size:15px;margin:0 0 10px;color:var(--m)}
-
-/* Grid & forms */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.full{grid-column:1/-1}
-@media(max-width:600px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
-
-label{font-size:12px;font-weight:700;color:var(--m);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
-input,select,textarea{width:100%;padding:12px;border:1px solid var(--b);border-radius:var(--radius-sm);font-size:15px;background:#fff;-webkit-appearance:none;appearance:none}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--g);box-shadow:0 0 0 3px rgba(31,95,58,.12)}
-input[readonly],textarea[readonly],select:disabled{background:#f5f6f5;color:#66736b}
-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2366736b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-
-/* Buttons */
-.btn{border:0;border-radius:var(--radius-sm);padding:13px 16px;font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .15s}
-.btn:active{transform:scale(.97)}
-.btn-primary{background:var(--g);color:#fff}
-.btn-primary:hover{background:var(--g2)}
-.btn-secondary{background:var(--g3);color:var(--g)}
-.btn-secondary:hover{background:#d4edda}
-.btn-danger{background:#fff0f0;color:var(--danger)}
-.btn-ghost{background:transparent;color:var(--m)}
-.btn-block{width:100%}
-.btn-lg{padding:16px;font-size:16px;border-radius:var(--radius)}
-.btn-sm{padding:8px 12px;font-size:13px}
-
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.row .btn{flex:1}
-
-/* Dashboard */
-.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
-.stat-card{background:var(--g);color:#fff;border-radius:var(--radius);padding:16px;text-align:center}
-.stat-card.outbound{background:#8b5a2b}
-.stat-card h3{margin:0 0 6px;font-size:12px;opacity:.9;text-transform:uppercase;letter-spacing:.5px}
-.stat-card .val{margin:0;font-size:28px;font-weight:800}
-.stat-card .unit{font-size:13px;opacity:.8}
-
-.quick-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
-.qa-btn{background:#fff;border:1px solid var(--b);border-radius:var(--radius);padding:18px 12px;text-align:center;cursor:pointer;box-shadow:var(--shadow)}
-.qa-btn .icon{font-size:28px;margin-bottom:6px;display:block}
-.qa-btn .label{font-size:14px;font-weight:700;color:var(--g)}
-.qa-btn:active{transform:scale(.97)}
-
-.section-title{font-size:13px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px}
-
-/* Lists */
-.list-item{background:#fff;border:1px solid var(--b);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:var(--shadow)}
-.list-item:hover{border-color:var(--g)}
-.list-item .info{flex:1;min-width:0}
-.list-item .title{font-weight:700;font-size:15px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.list-item .meta{font-size:13px;color:var(--m)}
-.list-item .actions{display:flex;gap:6px}
-
-/* Chips */
-.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--g3);color:var(--g);font-size:12px;font-weight:700;margin:0 4px 4px 0}
-.chip .remove{width:16px;height:16px;border-radius:50%;background:var(--g);color:#fff;border:none;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-
-/* Stock */
-.stock-card{background:#fff;border:1px solid var(--b);border-radius:var(--radius);padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow)}
-.stock-card .stock-icon{width:48px;height:48px;border-radius:var(--radius-sm);background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
-.stock-card .stock-info{flex:1}
-.stock-card .stock-name{font-weight:700;font-size:16px;margin-bottom:2px}
-.stock-card .stock-code{font-size:12px;color:var(--m)}
-.stock-card .stock-qty{text-align:right}
-.stock-card .stock-val{font-size:24px;font-weight:800;color:var(--g)}
-.stock-card .stock-unit{font-size:12px;color:var(--m)}
-
-/* Material rows in WTN */
-.mat-row{display:grid;grid-template-columns:2fr 1fr 1fr 44px;gap:8px;align-items:end;margin-bottom:10px}
-.mat-row .mat-name{grid-column:1/-1}
-@media(min-width:600px){.mat-row .mat-name{grid-column:auto}}
-.mat-row .remove{height:44px;padding:0}
-
-/* Signature */
-.sig-wrap{border:1px solid var(--b);border-radius:var(--radius-sm);overflow:hidden;background:#fff}
-.sig-canvas{width:100%;height:140px;display:block;touch-action:none;background:#fff}
-.sig-tools{padding:8px;text-align:right}
-
-/* Modals */
-.modal{position:fixed;inset:0;z-index:30;display:none;align-items:flex-end;justify-content:center}
-.modal.show{display:flex}
-.modal .modal-back{position:absolute;inset:0;background:rgba(0,0,0,.45)}
-.modal .modal-content{position:relative;background:#fff;width:100%;max-width:500px;max-height:85vh;border-radius:var(--radius) var(--radius) 0 0;padding:20px;overflow:auto;animation:slideUp .25s}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.modal-header h3{margin:0;font-size:18px}
-.modal-close{background:none;border:none;font-size:24px;color:var(--m);cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
-
-/* WTN Print View */
-#wtn-print-view{display:none;background:#fff;padding:30px;max-width:800px;margin:0 auto}
-#wtn-print-view.show{display:block}
-#wtn-print-view h1{margin:0 0 8px;font-size:22px;color:var(--g)}
-#wtn-print-view .print-meta{color:#66736b;font-size:13px;margin-bottom:20px}
-#wtn-print-view .print-section{margin-bottom:18px}
-#wtn-print-view .print-section h3{margin:0 0 8px;font-size:14px;text-transform:uppercase;letter-spacing:1px;color:var(--g);border-bottom:2px solid var(--g);padding-bottom:4px}
-#wtn-print-view .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-#wtn-print-view .print-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee}
-#wtn-print-view .print-label{color:#66736b;font-size:13px}
-#wtn-print-view .print-val{font-weight:700;font-size:14px}
-#wtn-print-view .sig-img{max-width:200px;max-height:80px;border:1px solid #ddd;padding:4px}
-#wtn-print-view .material-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
-#wtn-print-view .material-table th,#wtn-print-view .material-table td{text-align:left;padding:8px;border-bottom:1px solid #ddd}
-#wtn-print-view .material-table th{background:#f5f5f5;font-weight:700}
-
-/* Empty state */
-.empty{text-align:center;padding:40px 20px;color:var(--m)}
-.empty .empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
-.empty h3{margin:0 0 6px;font-size:18px;color:#333}
-.empty p{margin:0;font-size:14px}
-
-/* Search */
-.search-wrap{position:relative;margin-bottom:12px}
-.search-wrap input{padding-left:40px}
-.search-wrap::before{content:"🔍";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;opacity:.5}
-
-/* Status badges */
-.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
-.badge-draft{background:#fff8df;color:#8a6d0b}
-.badge-saved{background:var(--g3);color:var(--g)}
-
-/* Toast */
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:#222;color:#fff;padding:12px 24px;border-radius:999px;font-size:14px;font-weight:600;z-index:40;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
-#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+/* App */
+#app-container{min-height:100vh;display:flex;flex-direction:column}
+header{background:#2d5a27;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+header .brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:600}
+header .brand .icon{font-size:24px}
+header .actions{display:flex;gap:12px;align-items:center}
+header button{background:rgba(255,255,255,0.15);border:none;color:#fff;padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer}
+header button:active{background:rgba(255,255,255,0.3)}
 
 /* Tabs */
-.tabs{display:flex;gap:4px;background:#fff;border:1px solid var(--b);border-radius:var(--radius-sm);padding:4px;margin-bottom:14px}
-.tab{flex:1;padding:10px;text-align:center;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)}
-.tab.active{background:var(--g);color:#fff}
+#tabs{display:flex;justify-content:space-around;background:#fff;padding:6px 0;border-bottom:1px solid #e0e0e0;position:sticky;top:56px;z-index:999}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;font-size:11px;color:#888;cursor:pointer;border:none;background:none;transition:all .2s}
+.tab.active{color:#2d5a27;font-weight:600}
+.tab .tab-icon{font-size:20px}
 
-/* Stepper for WTN */
-.stepper{display:flex;align-items:center;gap:8px;margin-bottom:16px;overflow:auto;padding-bottom:4px}
-.step{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;font-weight:700;color:var(--m);opacity:.6}
-.step.active{opacity:1;color:var(--g)}
-.step.done{opacity:1;color:var(--g)}
-.step .num{width:24px;height:24px;border-radius:50%;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px}
-.step.active .num,.step.done .num{background:var(--g)}
+/* Content */
+#content{flex:1;padding:16px;padding-bottom:100px}
+.tab-content{display:none}
+.tab-content.active{display:block}
 
-/* Floating action */
-.fab{position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--g);color:#fff;border:none;font-size:28px;box-shadow:0 4px 12px rgba(0,0,0,.25);cursor:pointer;z-index:15;display:flex;align-items:center;justify-content:center}
-.fab:active{transform:scale(.92)}
+/* Cards */
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.card h3{font-size:16px;margin-bottom:12px;color:#2d5a27}
 
-/* Print */
-@media print{
-  header,#drawer,.no-print,.fab{display:none!important}
-  body{background:#fff;overflow:visible}
-  main{padding:0;overflow:visible}
-  .page{display:none!important}
-  #wtn-print-view{display:block!important;position:static}
-}
-.nav-tab.active{background:var(--g);color:#fff}
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;border-radius:16px;padding:16px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.stat-card .label{font-size:12px;color:#888;margin-bottom:4px}
+.stat-card .value{font-size:28px;font-weight:700;color:#2d5a27}
+.stat-card .unit{font-size:12px;color:#888}
+
+/* Forms */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:12px;font-size:15px;background:#fafafa;transition:border .2s;-webkit-appearance:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#2d5a27;background:#fff}
+.form-group textarea{min-height:80px;resize:vertical}
+
+/* Toggle */
+.toggle-group{display:flex;background:#f0f0f0;border-radius:12px;padding:4px}
+.toggle-btn{flex:1;padding:10px;border:none;background:transparent;border-radius:10px;font-size:14px;font-weight:600;color:#888;cursor:pointer;transition:all .2s}
+.toggle-btn.active{background:#2d5a27;color:#fff}
+
+/* Buttons */
+.btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:10px}
+.btn-primary{background:#2d5a27;color:#fff}
+.btn-primary:active{background:#1a3a18;transform:scale(0.98)}
+.btn-secondary{background:#e8f5e9;color:#2d5a27}
+.btn-secondary:active{background:#c8e6c9}
+.btn-danger{background:#ffebee;color:#c62828}
+.btn-row{display:flex;gap:10px}
+.btn-row .btn{flex:1;margin-bottom:0}
+
+/* Stepper */
+.stepper{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px}
+.step{display:flex;align-items:center;gap:6px}
+.step-circle{width:28px;height:28px;border-radius:50%;background:#e0e0e0;color:#888;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.step.active .step-circle{background:#2d5a27;color:#fff}
+.step.completed .step-circle{background:#4caf50;color:#fff}
+.step-label{font-size:12px;color:#888}
+.step.active .step-label{color:#2d5a27;font-weight:600}
+
+/* Company list */
+.company-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:flex-start}
+.company-info h4{font-size:16px;margin-bottom:4px}
+.company-info p{font-size:13px;color:#888;margin-bottom:2px}
+.company-actions{display:flex;gap:8px;flex-direction:column}
+.company-actions button{padding:6px 12px;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-wa{background:#e8f5e9;color:#2d5a27}
+.btn-email{background:#e3f2fd;color:#1565c0}
+
+/* WTN List */
+.wtn-item{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);border-left:4px solid #2d5a27}
+.wtn-item.outbound{border-left-color:#ed6c02}
+.wtn-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.wtn-id{font-weight:700;font-size:15px;color:#2d5a27}
+.wtn-date{font-size:12px;color:#888}
+.wtn-details{font-size:13px;color:#666}
+.wtn-actions{display:flex;gap:8px;margin-top:10px}
+.wtn-actions button{padding:6px 10px;border:none;border-radius:8px;font-size:12px;cursor:pointer;background:#f5f5f5}
+
+/* Stock */
+.stock-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0}
+.stock-row:last-child{border-bottom:none}
+.stock-name{font-weight:600}
+.stock-qty{font-size:14px;color:#666}
+.stock-qty.low{color:#c62828;font-weight:700}
+
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:#888}
+.empty .icon{font-size:48px;margin-bottom:12px;opacity:0.4}
+
+/* Signature */
+#signature-pad{background:#fafafa;border:2px dashed #ccc;border-radius:12px;width:100%;height:180px;touch-action:none}
+
+/* Modal */
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-content{background:#fff;border-radius:20px;padding:20px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto}
+.modal h3{margin-bottom:16px}
+
+/* Toast */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:#333;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;opacity:0;transition:all .3s;z-index:10001;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Print/PDF */
+@media print{header,#tabs,.btn,.wtn-actions{display:none!important}#content{padding:0}.tab-content{display:none!important}.tab-content.active{display:block!important}}
 </style>
 <base target="_blank">
 </head>
 <body>
-<div id="app">
 
-<!-- Header -->
-<header style="background:var(--g);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:10">
-  <h1 style="margin:0;font-size:20px">♻️ Recyclables UK Manager</h1>
-</header>
-<div style="display:flex;gap:4px;background:#fff;border-bottom:1px solid var(--b);padding:8px 16px;position:sticky;top:54px;z-index:9">
-  <button class="nav-tab active" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('dashboard')">🏠 Home</button>
-  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('new-wtn')">➕ New WTN</button>
-  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('archive')">📄 Archive</button>
-  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('companies')">🏢 Companies</button>
-  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('stock')">📦 Stock</button>
-  <button class="nav-tab" style="flex:1;padding:10px 4px;text-align:center;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--m)" onclick="navTo('settings')">⚙️ Settings</button>
+<!-- PIN LOCK SCREEN -->
+<div id="pin-screen">
+<div class="logo">♻️</div>
+<h2 id="pin-title">Enter PIN</h2>
+<p id="pin-subtitle">Secure your customer data</p>
+<div id="pin-dots">
+<div class="pin-dot"></div>
+<div class="pin-dot"></div>
+<div class="pin-dot"></div>
+<div class="pin-dot"></div>
+</div>
+<div id="pin-pad">
+<button class="pin-key" onclick="pinInput(1)">1</button>
+<button class="pin-key" onclick="pinInput(2)">2</button>
+<button class="pin-key" onclick="pinInput(3)">3</button>
+<button class="pin-key" onclick="pinInput(4)">4</button>
+<button class="pin-key" onclick="pinInput(5)">5</button>
+<button class="pin-key" onclick="pinInput(6)">6</button>
+<button class="pin-key" onclick="pinInput(7)">7</button>
+<button class="pin-key" onclick="pinInput(8)">8</button>
+<button class="pin-key" onclick="pinInput(9)">9</button>
+<button class="pin-key" onclick="pinBackspace()">⌫</button>
+<button class="pin-key" onclick="pinInput(0)">0</button>
+<button class="pin-key" onclick="pinClear()">C</button>
+</div>
+<div id="pin-error"></div>
 </div>
 
-<!-- Drawer -->
+<!-- APP CONTAINER -->
+<div id="app-container">
+<header>
+<div class="brand"><span class="icon">♻️</span>Recyclables UK Manager</div>
+<div class="actions">
+<button onclick="lockApp()" title="Lock">🔒</button>
+</div>
+</header>
 
+<nav id="tabs">
+<button class="tab active" onclick="switchTab('home')">
+<span class="tab-icon">🏠</span>
+<span>Home</span>
+</button>
+<button class="tab" onclick="switchTab('newwtn')">
+<span class="tab-icon">➕</span>
+<span>New WTN</span>
+</button>
+<button class="tab" onclick="switchTab('archive')">
+<span class="tab-icon">📄</span>
+<span>Archive</span>
+</button>
+<button class="tab" onclick="switchTab('companies')">
+<span class="tab-icon">🏢</span>
+<span>Companies</span>
+</button>
+<button class="tab" onclick="switchTab('stock')">
+<span class="tab-icon">📦</span>
+<span>Stock</span>
+</button>
+<button class="tab" onclick="switchTab('settings')">
+<span class="tab-icon">⚙️</span>
+<span>Settings</span>
+</button>
+</nav>
 
-<!-- Main -->
-<main id="main">
+<div id="content">
 
-<!-- DASHBOARD -->
-<div class="page active" id="page-dashboard">
-  <div class="stat-grid">
-    <div class="stat-card">
-      <h3>Inbound Today</h3>
-      <p class="val" id="dash-inbound">0</p>
-      <p class="unit">kg</p>
-    </div>
-    <div class="stat-card outbound">
-      <h3>Outbound Today</h3>
-      <p class="val" id="dash-outbound">0</p>
-      <p class="unit">kg</p>
-    </div>
-  </div>
-  <div class="quick-actions">
-    <div class="qa-btn" onclick="navTo('new-wtn')">
-      <span class="icon">➕</span>
-      <span class="label">New WTN</span>
-    </div>
-    <div class="qa-btn" onclick="navTo('companies')">
-      <span class="icon">🏢</span>
-      <span class="label">Companies</span>
-    </div>
-    <div class="qa-btn" onclick="navTo('stock')">
-      <span class="icon">📦</span>
-      <span class="label">Stock</span>
-    </div>
-    <div class="qa-btn" onclick="navTo('archive')">
-      <span class="icon">📄</span>
-      <span class="label">Archive</span>
-    </div>
-  </div>
-  <div class="section-title">Recent WTNs</div>
-  <div id="dash-recent"></div>
+<!-- HOME -->
+<div id="tab-home" class="tab-content active">
+<div class="stats-grid">
+<div class="stat-card">
+<div class="label">Inbound Today</div>
+<div class="value" id="inbound-today">0</div>
+<div class="unit">kg</div>
+</div>
+<div class="stat-card">
+<div class="label">Outbound Today</div>
+<div class="value" id="outbound-today">0</div>
+<div class="unit">kg</div>
+</div>
+</div>
+<div class="card">
+<h3>📄 Recent WTNs</h3>
+<div id="recent-wtns"><div class="empty"><div class="icon">📄</div><p>No WTNs yet</p></div></div>
+</div>
 </div>
 
 <!-- NEW WTN -->
-<div class="page" id="page-new-wtn">
-  <div class="card">
-    <div class="stepper">
-      <div class="step active" id="step1-ind"><span class="num">1</span> Company</div>
-      <div class="step" id="step2-ind"><span class="num">2</span> Details</div>
-      <div class="step" id="step3-ind"><span class="num">3</span> Materials</div>
-      <div class="step" id="step4-ind"><span class="num">4</span> Sign</div>
-    </div>
-
-    <!-- Step 1: Direction & Company -->
-    <div id="wtn-step1">
-      <label>Direction</label>
-      <div class="tabs" style="margin-bottom:16px">
-        <button class="tab active" id="tab-in" onclick="setWTNDirection('IN')">Inbound</button>
-        <button class="tab" id="tab-out" onclick="setWTNDirection('OUT')">Outbound</button>
-      </div>
-      <div class="grid">
-        <div class="full">
-          <label>Company</label>
-          <select id="wtn-company" onchange="wtnCompanyChanged()"></select>
-        </div>
-        <div class="full">
-          <label>Contact Person</label>
-          <input id="wtn-contact" placeholder="Name of person handing over / receiving">
-        </div>
-      </div>
-      <div style="margin-top:16px">
-        <button class="btn btn-primary btn-block btn-lg" onclick="goToStep(2)">Next: Vehicle & Details →</button>
-      </div>
-    </div>
-
-    <!-- Step 2: Vehicle & Transfer Details -->
-    <div id="wtn-step2" style="display:none">
-      <div class="grid">
-        <div>
-          <label>Vehicle Registration</label>
-          <select id="wtn-vehicle"><option value="">-- Select vehicle --</option></select>
-          <div style="margin-top:6px"><button class="btn btn-sm btn-secondary" onclick="showAddVehicleModal()">+ Add Vehicle</button></div>
-        </div>
-        <div>
-          <label>Transfer Date</label>
-          <input id="wtn-date" type="date">
-        </div>
-        <div>
-          <label>Transfer Time</label>
-          <input id="wtn-time" type="time">
-        </div>
-        <div>
-          <label>How Contained</label>
-          <select id="wtn-contained">
-            <option>Small bales</option>
-            <option>Mill-size bales</option>
-            <option>Loose</option>
-            <option>Sacks</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div class="full">
-          <label>Transfer / Collection Point</label>
-          <input id="wtn-transfer-point">
-        </div>
-        <div>
-          <label>Broker / Dealer (if any)</label>
-          <input id="wtn-broker">
-        </div>
-        <div>
-          <label>Broker Registration</label>
-          <input id="wtn-broker-reg">
-        </div>
-      </div>
-      <div class="row" style="margin-top:16px">
-        <button class="btn btn-ghost" onclick="goToStep(1)">← Back</button>
-        <button class="btn btn-primary btn-block btn-lg" onclick="goToStep(3)">Next: Materials →</button>
-      </div>
-    </div>
-
-    <!-- Step 3: Materials -->
-    <div id="wtn-step3" style="display:none">
-      <div id="wtn-materials"></div>
-      <button class="btn btn-secondary btn-block" onclick="addWTNMaterial()" style="margin:10px 0">+ Add Material</button>
-      <div class="card" style="background:var(--g3);border-color:var(--g)">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-weight:700">Total Quantity</span>
-          <span style="font-size:22px;font-weight:800;color:var(--g)"><span id="wtn-total">0</span> kg</span>
-        </div>
-      </div>
-      <div class="row" style="margin-top:16px">
-        <button class="btn btn-ghost" onclick="goToStep(2)">← Back</button>
-        <button class="btn btn-primary btn-block btn-lg" onclick="goToStep(4)">Next: Signatures →</button>
-      </div>
-    </div>
-
-    <!-- Step 4: Signatures -->
-    <div id="wtn-step4" style="display:none">
-      <div class="grid">
-        <div>
-          <label id="sig-party-label">Customer Signature</label>
-          <div id="saved-sig-party-wrap" style="margin-bottom:8px;display:none">
-            <button class="btn btn-sm btn-secondary" onclick="useSavedPartySig()">✓ Use Saved Signature</button>
-          </div>
-          <div class="sig-wrap">
-            <canvas id="sig-party" class="sig-canvas"></canvas>
-            <div class="sig-tools">
-              <button class="btn btn-sm btn-ghost" onclick="clearSig('sig-party')">Clear</button>
-            </div>
-          </div>
-          <input id="sig-party-name" placeholder="Printed name">
-        </div>
-        <div>
-          <label>Recyclables UK Signature</label>
-          <div id="saved-sig-ruk-wrap" style="margin-bottom:8px;display:none">
-            <button class="btn btn-sm btn-secondary" onclick="useSavedRukSig()">✓ Use Saved Signature</button>
-          </div>
-          <div class="sig-wrap">
-            <canvas id="sig-ruk" class="sig-canvas"></canvas>
-            <div class="sig-tools">
-              <button class="btn btn-sm btn-ghost" onclick="clearSig('sig-ruk')">Clear</button>
-            </div>
-          </div>
-          <input id="sig-ruk-name" placeholder="Printed name">
-        </div>
-      </div>
-      <div class="row" style="margin-top:20px">
-        <button class="btn btn-ghost" onclick="goToStep(3)">← Back</button>
-        <button class="btn btn-primary btn-block btn-lg" onclick="reviewWTN()">Review WTN</button>
-      </div>
-    </div>
-  </div>
+<div id="tab-newwtn" class="tab-content">
+<div class="card">
+<div class="stepper">
+<div class="step active" id="step-1"><div class="step-circle">1</div><span class="step-label">Company</span></div>
+<div class="step" id="step-2"><div class="step-circle">2</div><span class="step-label">Details</span></div>
+<div class="step" id="step-3"><div class="step-circle">3</div><span class="step-label">Materials</span></div>
+<div class="step" id="step-4"><div class="step-circle">4</div><span class="step-label">Sign</span></div>
 </div>
 
-<!-- WTN REVIEW / PRINT -->
-<div class="page" id="page-wtn-review">
-  <div class="card no-print">
-    <h2>Review WTN</h2>
-    <p style="color:var(--m);font-size:14px">Check everything is correct before saving.</p>
-    <div class="row" style="margin-top:14px">
-      <button class="btn btn-primary btn-block btn-lg" onclick="saveWTN()">✓ Save WTN</button>
-    </div>
-    <div class="row" style="margin-top:8px">
-      <button class="btn btn-secondary" onclick="goToStep(4)">← Edit</button>
-      <button class="btn btn-ghost" onclick="navTo('dashboard')">Cancel</button>
-    </div>
-  </div>
-  <div id="wtn-print-view"></div>
+<!-- Step 1 -->
+<div id="wizard-1">
+<div class="form-group">
+<label>Direction</label>
+<div class="toggle-group">
+<button class="toggle-btn active" id="dir-inbound" onclick="setDirection('inbound')">Inbound</button>
+<button class="toggle-btn" id="dir-outbound" onclick="setDirection('outbound')">Outbound</button>
+</div>
+</div>
+<div class="form-group">
+<label>Company</label>
+<select id="wtn-company" onchange="loadCompanyContact()">
+<option value="">Select company...</option>
+</select>
+</div>
+<div class="form-group">
+<label>Contact Person</label>
+<input type="text" id="wtn-contact" placeholder="Name of person handing over / receiving">
+</div>
+<button class="btn btn-primary" onclick="nextStep(2)">Next: Vehicle & Details →</button>
+</div>
+
+<!-- Step 2 -->
+<div id="wizard-2" style="display:none">
+<div class="form-group">
+<label>Vehicle Registration</label>
+<input type="text" id="wtn-vehicle" placeholder="e.g. AB12 CDE">
+</div>
+<div class="form-group">
+<label>Driver Name</label>
+<input type="text" id="wtn-driver" placeholder="Driver name">
+</div>
+<div class="form-group">
+<label>Date & Time</label>
+<input type="datetime-local" id="wtn-datetime">
+</div>
+<div class="form-group">
+<label>Notes</label>
+<textarea id="wtn-notes" placeholder="Any additional notes..."></textarea>
+</div>
+<div class="btn-row">
+<button class="btn btn-secondary" onclick="prevStep(1)">← Back</button>
+<button class="btn btn-primary" onclick="nextStep(3)">Next: Materials →</button>
+</div>
+</div>
+
+<!-- Step 3 -->
+<div id="wizard-3" style="display:none">
+<div id="materials-list">
+<div class="form-group material-row">
+<label>Material</label>
+<select class="mat-type">
+<option value="">Select material...</option>
+<option value="Cardboard">Cardboard</option>
+<option value="Plastic">Plastic</option>
+<option value="Wood/Pallets">Wood / Pallets</option>
+<option value="Metal">Metal</option>
+<option value="Paper">Paper</option>
+<option value="General Waste">General Waste</option>
+<option value="Other">Other</option>
+</select>
+</div>
+<div class="form-group">
+<label>Weight (kg)</label>
+<input type="number" class="mat-weight" placeholder="0" min="0" step="0.1">
+</div>
+</div>
+<button class="btn btn-secondary" onclick="addMaterialRow()">+ Add Another Material</button>
+<div class="btn-row">
+<button class="btn btn-secondary" onclick="prevStep(2)">← Back</button>
+<button class="btn btn-primary" onclick="nextStep(4)">Next: Sign →</button>
+</div>
+</div>
+
+<!-- Step 4 -->
+<div id="wizard-4" style="display:none">
+<div class="form-group">
+<label>Customer Signature</label>
+<canvas id="signature-pad"></canvas>
+</div>
+<button class="btn btn-secondary" onclick="clearSignature()">Clear Signature</button>
+<div class="btn-row" style="margin-top:12px">
+<button class="btn btn-secondary" onclick="prevStep(3)">← Back</button>
+<button class="btn btn-primary" onclick="saveWTN()">✓ Save WTN</button>
+</div>
+</div>
+</div>
 </div>
 
 <!-- ARCHIVE -->
-<div class="page" id="page-archive">
-  <div class="card no-print">
-    <div class="search-wrap">
-      <input id="archive-search" placeholder="Search company, vehicle, material, WTN number..." oninput="renderArchive()">
-    </div>
-    <div class="row">
-      <select id="archive-filter-dir" onchange="renderArchive()" style="flex:1">
-        <option value="">All Directions</option>
-        <option value="IN">Inbound</option>
-        <option value="OUT">Outbound</option>
-      </select>
-      <input id="archive-filter-date" type="date" onchange="renderArchive()" style="flex:1">
-      <button class="btn btn-ghost btn-sm" onclick="clearArchiveFilters()">Clear</button>
-    </div>
-  </div>
-  <div id="archive-list"></div>
+<div id="tab-archive" class="tab-content">
+<div class="card">
+<h3>📄 All WTNs</h3>
+<div id="all-wtns"><div class="empty"><div class="icon">📄</div><p>No WTNs saved yet</p></div></div>
+</div>
 </div>
 
 <!-- COMPANIES -->
-<div class="page" id="page-companies">
-  <div class="card no-print">
-    <div class="search-wrap">
-      <input id="company-search" placeholder="Search companies..." oninput="renderCompanies()">
-    </div>
-    <button class="btn btn-primary btn-block" onclick="showCompanyModal()">+ Add Company</button>
-  </div>
-  <div id="companies-list"></div>
+<div id="tab-companies" class="tab-content">
+<div class="card">
+<div class="form-group">
+<input type="text" id="company-search" placeholder="🔍 Search companies..." oninput="renderCompanies()">
 </div>
-
-<!-- COMPANY DETAIL -->
-<div class="page" id="page-company-detail">
-  <div class="card no-print">
-    <button class="btn btn-ghost btn-sm" onclick="navTo('companies')">← Back to Companies</button>
-  </div>
-  <div id="company-detail-content"></div>
+<button class="btn btn-primary" onclick="showAddCompany()">+ Add Company</button>
+<div id="companies-list" style="margin-top:12px"></div>
+</div>
 </div>
 
 <!-- STOCK -->
-<div class="page" id="page-stock">
-  <div id="stock-list"></div>
+<div id="tab-stock" class="tab-content">
+<div class="card">
+<h3>📦 Current Stock</h3>
+<div id="stock-list"><div class="empty"><div class="icon">📦</div><p>No stock data yet</p></div></div>
+</div>
+<div class="card">
+<h3>⚠️ Low Stock Alerts</h3>
+<div id="stock-alerts"><p style="color:#888;font-size:14px">Set minimum levels in Settings</p></div>
+</div>
 </div>
 
 <!-- SETTINGS -->
-<div class="page" id="page-settings">
-  <div class="card">
-    <h2>🏢 Recyclables UK Details</h2>
-    <div class="grid">
-      <div class="full"><label>Company Name</label><input id="set-name" value="Recyclables UK"></div>
-      <div class="full"><label>Representative Name</label><input id="set-rep" value="Ian Brown"></div>
-      <div class="full"><label>Address</label><textarea id="set-address" rows="3">Unit B1, Morston Quays, Stephenson Street, Wallsend, NE28 6UE</textarea></div>
-      <div><label>Waste Carrier Reg</label><input id="set-reg" value="CBDU609852"></div>
-      <div><label>Telephone</label><input id="set-phone" value="07526201579"></div>
-      <div class="full"><label>Email</label><input id="set-email" value="Ian@recyclablesuk.co.uk"></div>
-    </div>
-    <div style="margin-top:14px">
-      <label>Recyclables UK Signature</label>
-      <div class="sig-wrap">
-        <canvas id="sig-settings" class="sig-canvas"></canvas>
-        <div class="sig-tools">
-          <button class="btn btn-sm btn-ghost" onclick="clearSig('sig-settings')">Clear</button>
-        </div>
-      </div>
-    </div>
-    <button class="btn btn-primary btn-block" style="margin-top:16px" onclick="saveSettings()">Save Settings</button>
-  </div>
-  <div class="card" style="margin-top:12px">
-    <h2>⚠️ Danger Zone</h2>
-    <button class="btn btn-danger btn-block" onclick="exportData()">📤 Export All Data (JSON)</button>
-    <div style="height:8px"></div>
-    <button class="btn btn-danger btn-block" onclick="if(confirm('DELETE ALL DATA? This cannot be undone.')){localStorage.clear();location.reload()}">🗑 Delete All Data</button>
-  </div>
+<div id="tab-settings" class="tab-content">
+<div class="card">
+<h3>🏢 Recyclables UK Details</h3>
+<div class="form-group">
+<label>Company Name</label>
+<input type="text" id="settings-name" placeholder="Recyclables UK Ltd">
+</div>
+<div class="form-group">
+<label>Representative Name</label>
+<input type="text" id="settings-rep" placeholder="Your name">
+</div>
+<div class="form-group">
+<label>Address</label>
+<textarea id="settings-address" placeholder="Business address"></textarea>
+</div>
+<div class="form-group">
+<label>Waste Carrier Registration</label>
+<input type="text" id="settings-reg" placeholder="Registration number">
+</div>
+<div class="form-group">
+<label>Telephone</label>
+<input type="tel" id="settings-phone" placeholder="Phone number">
+</div>
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="settings-email" placeholder="Email address">
+</div>
+<button class="btn btn-primary" onclick="saveSettings()">Save Details</button>
 </div>
 
-</main>
+<div class="card">
+<h3>🔐 Security</h3>
+<button class="btn btn-secondary" onclick="changePIN()">Change PIN</button>
+<button class="btn btn-secondary" onclick="exportBackup()">📤 Export Backup (JSON)</button>
+<button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+</div>
 
-<!-- Floating Action Button -->
-<button class="fab no-print" onclick="navTo('new-wtn')">+</button>
+<div class="card">
+<h3>⚠️ Stock Alert Levels</h3>
+<div class="form-group">
+<label>Cardboard Min (kg)</label>
+<input type="number" id="alert-cardboard" placeholder="100">
+</div>
+<div class="form-group">
+<label>Plastic Min (kg)</label>
+<input type="number" id="alert-plastic" placeholder="100">
+</div>
+<div class="form-group">
+<label>Wood/Pallets Min (kg)</label>
+<input type="number" id="alert-wood" placeholder="50">
+</div>
+<div class="form-group">
+<label>Metal Min (kg)</label>
+<input type="number" id="alert-metal" placeholder="50">
+</div>
+<button class="btn btn-primary" onclick="saveAlerts()">Save Alert Levels</button>
+</div>
+</div>
 
-<!-- Toast -->
+</div>
+</div>
+
+<!-- Add Company Modal -->
+<div id="modal-company" class="modal" style="display:none" onclick="if(event.target===this)closeModal()">
+<div class="modal-content">
+<h3>➕ Add Company</h3>
+<div class="form-group">
+<label>Company Name</label>
+<input type="text" id="newco-name" placeholder="Company name">
+</div>
+<div class="form-group">
+<label>Contact Person</label>
+<input type="text" id="newco-contact" placeholder="Contact name">
+</div>
+<div class="form-group">
+<label>Postcode</label>
+<input type="text" id="newco-postcode" placeholder="e.g. SR4 6LL">
+</div>
+<div class="form-group">
+<label>Phone</label>
+<input type="tel" id="newco-phone" placeholder="Phone number">
+</div>
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="newco-email" placeholder="Email address">
+</div>
+<div class="form-group">
+<label>Preferred Contact</label>
+<select id="newco-pref">
+<option value="phone">Phone</option>
+<option value="whatsapp">WhatsApp</option>
+<option value="email">Email</option>
+</select>
+</div>
+<div class="btn-row">
+<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+<button class="btn btn-primary" onclick="saveCompany()">Save</button>
+</div>
+</div>
+</div>
+
 <div id="toast"></div>
 
-<!-- Add Vehicle Modal -->
-<div class="modal" id="modal-vehicle">
-  <div class="modal-back" onclick="closeModal('modal-vehicle')"></div>
-  <div class="modal-content">
-    <div class="modal-header"><h3>Add Vehicle</h3><button class="modal-close" onclick="closeModal('modal-vehicle')">×</button></div>
-    <label>Registration</label>
-    <input id="new-vehicle-reg" placeholder="e.g. AB12 CDE" style="text-transform:uppercase">
-    <label>Notes</label>
-    <input id="new-vehicle-notes" placeholder="Optional">
-    <button class="btn btn-primary btn-block" style="margin-top:14px" onclick="addVehicleFromModal()">Add Vehicle</button>
-  </div>
-</div>
-
-<!-- Company Modal -->
-<div class="modal" id="modal-company">
-  <div class="modal-back" onclick="closeModal('modal-company')"></div>
-  <div class="modal-content">
-    <div class="modal-header"><h3 id="company-modal-title">Add Company</h3><button class="modal-close" onclick="closeModal('modal-company')">×</button></div>
-    <input type="hidden" id="company-modal-id">
-    <div class="grid">
-      <div class="full"><label>Company Name *</label><input id="co-name"></div>
-      <div><label>Contact Person</label><input id="co-contact"></div>
-      <div><label>Mobile</label><input id="co-mobile" type="tel"></div>
-      <div class="full"><label>Email</label><input id="co-email" type="email"></div>
-      <div><label>Preferred Contact</label>
-        <select id="co-pref"><option>WhatsApp</option><option>Email</option><option>Phone</option></select>
-      </div>
-      <div class="full"><label>Address</label><textarea id="co-address" rows="2"></textarea></div>
-      <div><label>Postcode</label><input id="co-postcode"></div>
-      <div><label>SIC Code</label><input id="co-sic" placeholder="e.g. 46750"></div>
-      <div class="full"><label>Notes</label><textarea id="co-notes" rows="2"></textarea></div>
-    </div>
-    <div style="margin-top:14px">
-      <label>Authorised Signature</label>
-      <div class="sig-wrap">
-        <canvas id="sig-company" class="sig-canvas"></canvas>
-        <div class="sig-tools"><button class="btn btn-sm btn-ghost" onclick="clearSig('sig-company')">Clear</button></div>
-      </div>
-    </div>
-    <button class="btn btn-primary btn-block" style="margin-top:14px" onclick="saveCompanyModal()">Save Company</button>
-  </div>
-</div>
-
-<!-- WTN Actions Modal -->
-<div class="modal" id="modal-wtn-actions">
-  <div class="modal-back" onclick="closeModal('modal-wtn-actions')"></div>
-  <div class="modal-content">
-    <div class="modal-header"><h3>WTN Actions</h3><button class="modal-close" onclick="closeModal('modal-wtn-actions')">×</button></div>
-    <input type="hidden" id="action-wtn-id">
-    <button class="btn btn-secondary btn-block" onclick="actionReprint()">🖨 Reprint / PDF</button>
-    <div style="height:8px"></div>
-    <button class="btn btn-secondary btn-block" onclick="actionResend()">📤 Resend</button>
-    <div style="height:8px"></div>
-    <button class="btn btn-secondary btn-block" onclick="actionDuplicate()">📋 Duplicate</button>
-    <div style="height:8px"></div>
-    <button class="btn btn-danger btn-block" onclick="actionDelete()">🗑 Delete</button>
-  </div>
-</div>
-
 <script>
-/* ================= DATA & STATE ================= */
-const MATS = {
-  card:{name:"Cardboard packaging",code:"15 01 01",desc:"Paper and cardboard packaging"},
-  ldpe:{name:"LDPE packaging",code:"15 01 02",desc:"Plastic packaging (LDPE film/shrink wrap)"},
-  plastic19:{name:"Processed plastic from mechanical treatment",code:"19 12 04",desc:"Plastic and rubber from mechanical treatment of waste"},
-  pet:{name:"PET packaging",code:"15 01 01 (PET)",desc:"PET bottles and packaging"},
-  wood:{name:"Wood waste",code:"17 02 01",desc:"Wood from construction/demolition"},
-  metal:{name:"Metal packaging",code:"15 01 03",desc:"Steel/aluminium cans and packaging"}
+// ===================== CRYPTO =====================
+const SALT = new TextEncoder().encode('RecyclablesUK-v1');
+const IV_LEN = 12;
+
+async function deriveKey(pin){
+const enc = new TextEncoder();
+const mat = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+return crypto.subtle.deriveKey({name:'PBKDF2', salt:SALT, iterations:100000, hash:'SHA-256'}, mat, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+
+async function hashPIN(pin){
+const enc = new TextEncoder();
+const buf = await crypto.subtle.digest('SHA-256', enc.encode(pin));
+return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+
+async function encryptData(data, pin){
+const key = await deriveKey(pin);
+const iv = crypto.getRandomValues(new Uint8Array(IV_LEN));
+const txt = new TextEncoder().encode(JSON.stringify(data));
+const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, txt);
+const out = new Uint8Array(iv.length + ct.byteLength);
+out.set(iv); out.set(new Uint8Array(ct), iv.length);
+return btoa(String.fromCharCode(...out));
+}
+
+async function decryptData(b64, pin){
+try{
+const key = await deriveKey(pin);
+const all = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
+const iv = all.slice(0, IV_LEN);
+const ct = all.slice(IV_LEN);
+const dec = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct);
+return JSON.parse(new TextDecoder().decode(dec));
+}catch(e){return null;}
+}
+
+// ===================== STATE =====================
+let appData = {wtns:[], companies:[], settings:{}, alerts:{}, stock:{}};
+let currentPIN = '';
+let pinMode = 'unlock'; // 'unlock' | 'setup' | 'confirm'
+let pinTemp = '';
+let currentStep = 1;
+let wtnDraft = {direction:'inbound', materials:[]};
+let signaturePad, sigCtx;
+let inactivityTimer;
+const AUTO_LOCK_MS = 5 * 60 * 1000; // 5 minutes
+
+// ===================== PIN UI =====================
+function pinInput(n){
+if(currentPIN.length < 4){
+currentPIN += n;
+updatePinDots();
+if(currentPIN.length === 4) setTimeout(checkPIN, 150);
+}
+}
+function pinBackspace(){currentPIN = currentPIN.slice(0,-1); updatePinDots();}
+function pinClear(){currentPIN = ''; updatePinDots();}
+function updatePinDots(){
+document.querySelectorAll('.pin-dot').forEach((d,i)=>d.classList.toggle('filled', i < currentPIN.length));
+}
+function showPinError(msg){
+document.getElementById('pin-error').textContent = msg;
+document.getElementById('pin-screen').classList.add('shake');
+setTimeout(()=>document.getElementById('pin-screen').classList.remove('shake'), 400);
+}
+
+async function checkPIN(){
+const pin = currentPIN;
+if(pinMode === 'setup'){
+pinTemp = pin;
+pinMode = 'confirm';
+currentPIN = '';
+updatePinDots();
+document.getElementById('pin-title').textContent = 'Confirm PIN';
+document.getElementById('pin-subtitle').textContent = 'Enter the same 4 digits again';
+return;
+}
+if(pinMode === 'confirm'){
+if(pin === pinTemp){
+await finalizeSetup(pin);
+}else{
+currentPIN = '';
+updatePinDots();
+showPinError('PINs do not match. Try again.');
+pinMode = 'setup';
+document.getElementById('pin-title').textContent = 'Create PIN';
+document.getElementById('pin-subtitle').textContent = 'Choose a 4-digit PIN to secure your data';
+}
+return;
+}
+// unlock
+const hash = await hashPIN(pin);
+const storedHash = localStorage.getItem('wtnplus_pin_hash');
+if(hash !== storedHash){currentPIN='';updatePinDots();showPinError('Incorrect PIN');return;}
+const enc = localStorage.getItem('wtnplus_vault');
+if(enc){
+const dec = await decryptData(enc, pin);
+if(dec) appData = dec;
+else {currentPIN='';updatePinDots();showPinError('Unlock failed');return;}
+}
+unlockApp();
+}
+
+async function finalizeSetup(pin){
+const hash = await hashPIN(pin);
+localStorage.setItem('wtnplus_pin_hash', hash);
+// Migrate old data if present
+const old = migrateOldData();
+if(old) Object.assign(appData, old);
+await saveVault(pin);
+unlockApp();
+}
+
+function migrateOldData(){
+const old = {};
+try{
+const companies = localStorage.getItem('wtnplus_companies');
+const wtns = localStorage.getItem('wtnplus_wtns');
+const settings = localStorage.getItem('wtnplus_settings');
+if(companies) old.companies = JSON.parse(companies);
+if(wtns) old.wtns = JSON.parse(wtns);
+if(settings) old.settings = JSON.parse(settings);
+// Clean old keys
+localStorage.removeItem('wtnplus_companies');
+localStorage.removeItem('wtnplus_wtns');
+localStorage.removeItem('wtnplus_settings');
+}catch(e){}
+return Object.keys(old).length ? old : null;
+}
+
+async function saveVault(pin){
+const p = pin || currentPIN;
+if(!p) return;
+const enc = await encryptData(appData, p);
+localStorage.setItem('wtnplus_vault', enc);
+}
+
+function unlockApp(){
+document.getElementById('pin-screen').style.display = 'none';
+document.getElementById('app-container').style.display = 'flex';
+resetInactivityTimer();
+renderAll();
+}
+
+function lockApp(){
+currentPIN = '';
+updatePinDots();
+document.getElementById('pin-screen').style.display = 'flex';
+document.getElementById('app-container').style.display = 'none';
+document.getElementById('pin-title').textContent = 'Enter PIN';
+document.getElementById('pin-subtitle').textContent = 'Secure your customer data';
+pinMode = 'unlock';
+}
+
+async function changePIN(){
+const oldPIN = prompt('Enter current PIN:');
+if(!oldPIN) return;
+const hash = await hashPIN(oldPIN);
+if(hash !== localStorage.getItem('wtnplus_pin_hash')){toast('Incorrect PIN');return;}
+const newPIN = prompt('Enter new 4-digit PIN:');
+if(!newPIN || newPIN.length !== 4 || !/^\d{4}$/.test(newPIN)){toast('PIN must be 4 digits');return;}
+const confirm = prompt('Confirm new PIN:');
+if(newPIN !== confirm){toast('PINs do not match');return;}
+const newHash = await hashPIN(newPIN);
+localStorage.setItem('wtnplus_pin_hash', newHash);
+await saveVault(newPIN);
+toast('PIN changed successfully');
+}
+
+// ===================== INACTIVITY =====================
+function resetInactivityTimer(){
+clearTimeout(inactivityTimer);
+inactivityTimer = setTimeout(lockApp, AUTO_LOCK_MS);
+}
+['click','touchstart','keydown','scroll'].forEach(e=>document.addEventListener(e, resetInactivityTimer, true));
+
+// ===================== NAVIGATION =====================
+function switchTab(tab){
+document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+event.currentTarget.classList.add('active');
+document.getElementById('tab-'+tab).classList.add('active');
+if(tab==='home') renderHome();
+if(tab==='archive') renderArchive();
+if(tab==='companies') renderCompanies();
+if(tab==='stock') renderStock();
+if(tab==='settings') loadSettings();
+}
+
+// ===================== HOME =====================
+function renderHome(){
+const today = new Date().toISOString().split('T')[0];
+let inb=0, out=0;
+const recent = [];
+for(let i=appData.wtns.length-1; i>=0 && recent.length<5; i--){
+const w = appData.wtns[i];
+if(w.date && w.date.startsWith(today)){
+const total = w.materials.reduce((s,m)=>s+(parseFloat(m.weight)||0),0);
+if(w.direction==='inbound') inb+=total; else out+=total;
+}
+recent.push(w);
+}
+document.getElementById('inbound-today').textContent = Math.round(inb);
+document.getElementById('outbound-today').textContent = Math.round(out);
+const container = document.getElementById('recent-wtns');
+if(!recent.length){container.innerHTML='<div class="empty"><div class="icon">📄</div><p>No WTNs yet</p></div>';return;}
+container.innerHTML = recent.map(w=>renderWtnCard(w)).join('');
+}
+
+function renderWtnCard(w){
+const total = w.materials.reduce((s,m)=>s+(parseFloat(m.weight)||0),0);
+const matList = w.materials.map(m=>m.type).join(', ') || 'No materials';
+return `<div class="wtn-item ${w.direction}">
+<div class="wtn-header"><span class="wtn-id">#${w.id}</span><span class="wtn-date">${formatDate(w.date)}</span></div>
+<div class="wtn-details">${w.company} • ${matList} • ${total}kg</div>
+<div class="wtn-actions">
+<button onclick="printWTN('${w.id}')">🖨️ Print</button>
+<button onclick="shareWTN('${w.id}')">📤 Share</button>
+<button onclick="deleteWTN('${w.id}')" style="color:#c62828">🗑️</button>
+</div>
+</div>`;
+}
+
+// ===================== WTN WIZARD =====================
+function setDirection(dir){
+wtnDraft.direction = dir;
+document.getElementById('dir-inbound').classList.toggle('active', dir==='inbound');
+document.getElementById('dir-outbound').classList.toggle('active', dir==='outbound');
+}
+function nextStep(n){
+document.getElementById('wizard-'+currentStep).style.display='none';
+document.getElementById('wizard-'+n).style.display='block';
+document.getElementById('step-'+currentStep).classList.remove('active');
+document.getElementById('step-'+currentStep).classList.add('completed');
+document.getElementById('step-'+n).classList.add('active');
+currentStep=n;
+if(n===4) initSignature();
+}
+function prevStep(n){
+document.getElementById('wizard-'+currentStep).style.display='none';
+document.getElementById('wizard-'+n).style.display='block';
+document.getElementById('step-'+currentStep).classList.remove('active');
+document.getElementById('step-'+n).classList.remove('completed');
+document.getElementById('step-'+n).classList.add('active');
+currentStep=n;
+}
+function loadCompanyContact(){
+const cid = document.getElementById('wtn-company').value;
+const co = appData.companies.find(c=>c.id===cid);
+if(co && co.contact) document.getElementById('wtn-contact').value = co.contact;
+}
+function addMaterialRow(){
+const div = document.createElement('div');
+div.innerHTML = `<div class="form-group"><label>Material</label><select class="mat-type"><option value="">Select...</option><option>Cardboard</option><option>Plastic</option><option>Wood/Pallets</option><option>Metal</option><option>Paper</option><option>General Waste</option><option>Other</option></select></div><div class="form-group"><label>Weight (kg)</label><input type="number" class="mat-weight" placeholder="0" min="0" step="0.1"></div>`;
+document.getElementById('materials-list').appendChild(div);
+}
+function initSignature(){
+const c = document.getElementById('signature-pad');
+if(!c) return;
+c.width = c.offsetWidth;
+c.height = c.offsetHeight;
+sigCtx = c.getContext('2d');
+sigCtx.strokeStyle = '#000';
+sigCtx.lineWidth = 2;
+let drawing=false;
+const getPos = e=>{const r=c.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};};
+c.addEventListener('mousedown',e=>{drawing=true;const p=getPos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);});
+c.addEventListener('mousemove',e=>{if(!drawing)return;const p=getPos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();});
+c.addEventListener('mouseup',()=>drawing=false);
+c.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=getPos(e);sigCtx.beginPath();sigCtx.moveTo(p.x,p.y);},{passive:false});
+c.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=getPos(e);sigCtx.lineTo(p.x,p.y);sigCtx.stroke();},{passive:false});
+c.addEventListener('touchend',()=>drawing=false);
+}
+function clearSignature(){if(sigCtx){const c=document.getElementById('signature-pad');sigCtx.clearRect(0,0,c.width,c.height);}}
+
+async function saveWTN(){
+const company = document.getElementById('wtn-company').value;
+if(!company){toast('Please select a company');return;}
+const materials = [];
+document.querySelectorAll('#materials-list > div, #materials-list').forEach(el=>{
+const type = el.querySelector('.mat-type')?.value;
+const weight = parseFloat(el.querySelector('.mat-weight')?.value);
+if(type && weight) materials.push({type,weight});
+});
+if(!materials.length){toast('Please add at least one material');return;}
+const wtn = {
+id: 'WTN-' + Date.now(),
+direction: wtnDraft.direction,
+company: company,
+contact: document.getElementById('wtn-contact').value,
+vehicle: document.getElementById('wtn-vehicle').value,
+driver: document.getElementById('wtn-driver').value,
+date: document.getElementById('wtn-datetime').value || new Date().toISOString(),
+notes: document.getElementById('wtn-notes').value,
+materials: materials,
+signature: document.getElementById('signature-pad').toDataURL()
 };
-
-const DEFAULT_COMPANIES = [
-  {id:"c1",name:"Pallet Supplies Limited",contact:"",mobile:"",email:"",pref:"WhatsApp",address:"Bay 3, Pallion Shipyard, Pallion New Road, Sunderland",postcode:"SR4 6LL",sic:"",vehicles:[],signature:"",notes:""},
-  {id:"c2",name:"Youngs Quality Food Ltd",contact:"",mobile:"",email:"",pref:"WhatsApp",address:"Rivergreen Industrial Estate, Unit 6A Eastway, Sunderland",postcode:"SR4 6AD",sic:"",vehicles:[],signature:"",notes:""},
-  {id:"c3",name:"International Cookware",contact:"",mobile:"",email:"",pref:"Email",address:"Unit 1a Hall Dene Way, Seaham",postcode:"SR7 0PU",sic:"",vehicles:[],signature:"",notes:""}
-];
-
-const DEFAULT_SETTINGS = {
-  name:"Recyclables UK",rep:"Ian Brown",address:"Unit B1, Morston Quays, Stephenson Street, Wallsend, NE28 6UE",
-  reg:"CBDU609852",phone:"07526201579",email:"Ian@recyclablesuk.co.uk",signature:""
-};
-
-function db(key,val){
-  if(val===undefined)return JSON.parse(localStorage.getItem("ruk3_"+key)||"null");
-  localStorage.setItem("ruk3_"+key,JSON.stringify(val));
+appData.wtns.push(wtn);
+// Update stock
+materials.forEach(m=>{
+const key = m.type.toLowerCase().replace(/[^a-z]/g,'');
+if(!appData.stock[key]) appData.stock[key] = {name:m.type,qty:0};
+if(wtn.direction==='inbound') appData.stock[key].qty += m.weight;
+else appData.stock[key].qty = Math.max(0, appData.stock[key].qty - m.weight);
+});
+await saveVault();
+toast('WTN saved successfully');
+resetWizard();
+switchTab('home');
+renderHome();
 }
-function initDB(){
-  if(!db("companies")) db("companies",DEFAULT_COMPANIES);
-  if(!db("wtns")) db("wtns",[]);
-  if(!db("settings")) db("settings",DEFAULT_SETTINGS);
-  // Migrate old WTNs if present
-  const old = JSON.parse(localStorage.getItem("ruk_wtn")||"[]");
-  if(old.length && !db("migrated")){
-    const existing = db("wtns");
-    const converted = old.map((o,i)=>{
-      const cid = DEFAULT_COMPANIES.find(c=>c.name===o.company)?.id || "c1";
-      return {
-        id:"old_"+i,number:o.number,direction:o.direction,date:o.date,time:o.time,
-        companyId:cid,vehicle:o.vehicle||"",contained:o.contained||"Small bales",
-        materials:(o.materials||[]).map(m=>({key:m.key,name:m.name,code:m.code,desc:m.description,quantity:parseFloat(m.quantity)||0})),
-        totalKg:parseFloat(o.totalKg)||0,transferPoint:o.transferPoint||"",broker:o.broker||"",brokerReg:o.brokerReg||"",
-        sig1Name:o.sig1Name||"",sig2Name:o.sig2Name||"",sig1:"",sig2:"",status:"saved",createdAt:o.saved||new Date().toISOString()
-      };
-    });
-    db("wtns",[...converted,...existing]);
-    db("migrated",true);
-  }
+function resetWizard(){
+currentStep=1;
+['1','2','3','4'].forEach(i=>{document.getElementById('step-'+i).classList.remove('active','completed');});
+document.getElementById('step-1').classList.add('active');
+['wizard-1','wizard-2','wizard-3','wizard-4'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
+document.getElementById('wtn-company').value='';
+document.getElementById('wtn-contact').value='';
+document.getElementById('wtn-vehicle').value='';
+document.getElementById('wtn-driver').value='';
+document.getElementById('wtn-datetime').value='';
+document.getElementById('wtn-notes').value='';
+document.getElementById('materials-list').innerHTML = `<div class="form-group"><label>Material</label><select class="mat-type"><option value="">Select material...</option><option>Cardboard</option><option>Plastic</option><option>Wood/Pallets</option><option>Metal</option><option>Paper</option><option>General Waste</option><option>Other</option></select></div><div class="form-group"><label>Weight (kg)</label><input type="number" class="mat-weight" placeholder="0" min="0" step="0.1"></div>`;
+clearSignature();
 }
-
-/* ================= ROUTER ================= */
-let currentPage = "dashboard";
-function navTo(page){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  var el = document.getElementById("page-"+page);
-  if(el) el.classList.add("active");
-  document.querySelectorAll(".nav-tab").forEach(n=>n.classList.remove("active"));
-  var tabs = document.querySelectorAll(".nav-tab");
-  var map = {dashboard:0,"new-wtn":1,archive:2,companies:3,stock:4,settings:5};
-  if(map[page]!==undefined && tabs[map[page]]) tabs[map[page]].classList.add("active");
-  currentPage = page;
-  window.scrollTo(0,0);
-  if(page==="dashboard") renderDashboard();
-  if(page==="archive") renderArchive();
-  if(page==="companies") renderCompanies();
-  if(page==="stock") renderStock();
-  if(page==="settings") loadSettings();
-}
-
-
-/* ================= DASHBOARD ================= */
-function renderDashboard(){
-  const wtns = db("wtns");
-  const today = new Date().toISOString().slice(0,10);
-  let inb=0,out=0;
-  wtns.filter(w=>w.date===today).forEach(w=>{
-    if(w.direction==="IN") inb += w.totalKg||0;
-    else out += w.totalKg||0;
-  });
-  document.getElementById("dash-inbound").textContent = inb.toLocaleString();
-  document.getElementById("dash-outbound").textContent = out.toLocaleString();
-  const recent = wtns.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,5);
-  const el = document.getElementById("dash-recent");
-  if(!recent.length){el.innerHTML='<div class="empty"><div class="empty-icon">📄</div><h3>No WTNs yet</h3><p>Create your first WTN to see it here.</p></div>';return}
-  el.innerHTML = recent.map(w=>`
-    <div class="list-item" onclick="viewWTN('${w.id}')">
-      <div class="info">
-        <div class="title">${w.number}</div>
-        <div class="meta">${w.date} · ${w.direction==="IN"?"Inbound":"Outbound"} · ${w.totalKg}kg · ${companyName(w.companyId)}</div>
-      </div>
-      <span class="badge badge-saved">Saved</span>
-    </div>
-  `).join("");
-}
-
-/* ================= WTN CREATION ================= */
-let wtnState = {direction:"IN",step:1,companyId:"",materials:[]};
-
-function setWTNDirection(dir){
-  wtnState.direction = dir;
-  document.getElementById("tab-in").classList.toggle("active",dir==="IN");
-  document.getElementById("tab-out").classList.toggle("active",dir==="OUT");
-  populateWTNCompanies();
-  document.getElementById("sig-party-label").textContent = dir==="IN"?"Customer / Transferor Signature":"Recyclables UK / Transferor Signature";
-}
-
-function populateWTNCompanies(){
-  const companies = db("companies")||[];
-  const sel = document.getElementById("wtn-company");
-  sel.innerHTML = companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
-  if(companies.length) wtnCompanyChanged();
-}
-
-function wtnCompanyChanged(){
-  const companies = db("companies")||[];
-  const cid = document.getElementById("wtn-company").value;
-  const c = companies.find(x=>x.id===cid);
-  if(!c) return;
-  wtnState.companyId = cid;
-  document.getElementById("wtn-contact").value = c.contact||"";
-  // Populate vehicles
-  const vsel = document.getElementById("wtn-vehicle");
-  vsel.innerHTML = '<option value="">-- Select vehicle --</option>' + (c.vehicles||[]).map(v=>`<option value="${v.reg}">${v.reg}</option>`).join("") + '<option value="OTHER">Other / Not listed</option>';
-  // Transfer point
-  const tp = wtnState.direction==="IN" ? (c.address+(c.postcode?", "+c.postcode:"")) : (db("settings").address||"");
-  document.getElementById("wtn-transfer-point").value = tp;
-  // Saved sig
-  const savedWrap = document.getElementById("saved-sig-party-wrap");
-  if(c.signature){savedWrap.style.display="block";}else{savedWrap.style.display="none";}
-}
-
-function goToStep(n){
-  wtnState.step = n;
-  for(let i=1;i<=4;i++){
-    document.getElementById("wtn-step"+i).style.display = i===n?"block":"none";
-    const ind = document.getElementById("step"+i+"-ind");
-    ind.classList.remove("active","done");
-    if(i<n) ind.classList.add("done");
-    if(i===n) ind.classList.add("active");
-  }
-  if(n===4){
-    // Check saved RUK sig
-    const rukSig = db("settings")?.signature;
-    document.getElementById("saved-sig-ruk-wrap").style.display = rukSig?"block":"none";
-    document.getElementById("sig-ruk-name").value = db("settings")?.rep||"Ian Brown";
-    setTimeout(()=>{initSig("sig-party");initSig("sig-ruk");},50);
-  }
-}
-
-function addWTNMaterial(key="card",qty=""){
-  const id = "mat_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
-  const div = document.createElement("div");
-  div.className = "mat-row";
-  div.id = id;
-  div.innerHTML = `
-    <div class="mat-name"><label>Material</label><select class="mat-key" onchange="updateMatCode('${id}')">${Object.entries(MATS).map(([k,m])=>`<option value="${k}" ${k===key?"selected":""}>${m.name}</option>`).join("")}</select></div>
-    <div><label>LoW / EWC</label><input class="mat-code" readonly></div>
-    <div><label>Weight (kg)</label><input class="mat-qty" type="number" min="0" step="0.1" value="${qty}" oninput="updateWTNTotal()"></div>
-    <button class="btn danger remove" onclick="document.getElementById('${id}').remove();updateWTNTotal()">×</button>
-  `;
-  document.getElementById("wtn-materials").appendChild(div);
-  updateMatCode(id);
-  updateWTNTotal();
-}
-
-function updateMatCode(id){
-  const row = document.getElementById(id);
-  if(!row) return;
-  const key = row.querySelector(".mat-key").value;
-  row.querySelector(".mat-code").value = MATS[key]?.code||"";
-}
-
-function updateWTNTotal(){
-  let t=0;
-  document.querySelectorAll(".mat-qty").forEach(x=>t+=parseFloat(x.value)||0);
-  document.getElementById("wtn-total").textContent = t.toLocaleString();
-}
-
-function showAddVehicleModal(){
-  document.getElementById("new-vehicle-reg").value = "";
-  document.getElementById("new-vehicle-notes").value = "";
-  openModal("modal-vehicle");
-}
-
-function addVehicleFromModal(){
-  const reg = document.getElementById("new-vehicle-reg").value.trim().toUpperCase();
-  const notes = document.getElementById("new-vehicle-notes").value.trim();
-  if(!reg){toast("Enter a registration");return}
-  const companies = db("companies");
-  const cid = document.getElementById("wtn-company").value;
-  const c = companies.find(x=>x.id===cid);
-  if(c){c.vehicles = c.vehicles||[]; c.vehicles.push({reg,notes}); db("companies",companies);}
-  closeModal("modal-vehicle");
-  wtnCompanyChanged();
-  document.getElementById("wtn-vehicle").value = reg;
-  toast("Vehicle added");
-}
-
-function useSavedPartySig(){
-  const companies = db("companies");
-  const c = companies.find(x=>x.id===wtnState.companyId);
-  if(c&&c.signature){
-    const canvas = document.getElementById("sig-party");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    img.onload = ()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width/2,canvas.height/2);};
-    img.src = c.signature;
-  }
-}
-
-function useSavedRukSig(){
-  const sig = db("settings")?.signature;
-  if(sig){
-    const canvas = document.getElementById("sig-ruk");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    img.onload = ()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width/2,canvas.height/2);};
-    img.src = sig;
-  }
-}
-
-function reviewWTN(){
-  const companies = db("companies");
-  const settings = db("settings");
-  const c = companies.find(x=>x.id===wtnState.companyId);
-  const mats = [...document.querySelectorAll(".mat-row")].map(r=>{
-    const k = r.querySelector(".mat-key").value;
-    return {key:k,name:MATS[k].name,code:MATS[k].code,desc:MATS[k].desc,quantity:parseFloat(r.querySelector(".mat-qty").value)||0};
-  }).filter(m=>m.quantity>0);
-
-  const total = mats.reduce((s,m)=>s+m.quantity,0);
-  const date = document.getElementById("wtn-date").value;
-  const time = document.getElementById("wtn-time").value;
-  const vehicle = document.getElementById("wtn-vehicle").value;
-  const contained = document.getElementById("wtn-contained").value;
-  const transferPoint = document.getElementById("wtn-transfer-point").value;
-  const broker = document.getElementById("wtn-broker").value;
-  const brokerReg = document.getElementById("wtn-broker-reg").value;
-  const contact = document.getElementById("wtn-contact").value;
-  const sig1Name = document.getElementById("sig-party-name").value;
-  const sig2Name = document.getElementById("sig-ruk-name").value;
-
-  // Generate number
-  const slug = (s)=>(s||"PARTY").toUpperCase().replace(/[^A-Z0-9]+/g,"").slice(0,18)||"PARTY";
-  const dkey = date.replace(/-/g,"");
-  const allWtns = db("wtns")||[];
-  const prefix = `RUK-${wtnState.direction}-${slug(c.name)}-${dkey}-`;
-  const nums = allWtns.filter(x=>x.number?.startsWith(prefix)).map(x=>parseInt(x.number.split("-").pop())||0);
-  const seq = String(Math.max(0,...nums)+1).padStart(5,"0");
-  const number = prefix + seq;
-
-  wtnState.reviewData = {
-    id:"wtn_"+Date.now(),number,direction:wtnState.direction,date,time,
-    companyId:c.id,vehicle,contained,materials:mats,totalKg:total,
-    transferPoint,broker,brokerReg,contact,sig1Name,sig2Name,
-    sig1:getSigData("sig-party"),sig2:getSigData("sig-ruk"),
-    status:"draft",createdAt:new Date().toISOString()
-  };
-
-  // Build print view
-  const partyLabel = wtnState.direction==="IN"?"Transferor / Supplier":"Recyclables UK / Transferor";
-  const rukLabel = wtnState.direction==="IN"?"Transferee / Recyclables UK":"Transferee / Customer";
-  const rukAddress = settings.address||"";
-
-  let matRows = mats.map(m=>`<tr><td>${m.name}</td><td>${m.code}</td><td>${m.desc}</td><td style="text-align:right;font-weight:700">${m.quantity} kg</td></tr>`).join("");
-
-  document.getElementById("wtn-print-view").innerHTML = `
-    <h1>♻️ Recyclables UK — Waste Transfer Note</h1>
-    <div class="print-meta">WTN Number: <b>${number}</b> &nbsp;|&nbsp; Date: ${date} &nbsp;|&nbsp; Time: ${time}</div>
-
-    <div class="print-section">
-      <h3>Transfer Details</h3>
-      <div class="print-grid">
-        <div><div class="print-label">Direction</div><div class="print-val">${wtnState.direction==="IN"?"Inbound — to Recyclables UK":"Outbound — from Recyclables UK"}</div></div>
-        <div><div class="print-label">Vehicle</div><div class="print-val">${vehicle||"—"}</div></div>
-        <div><div class="print-label">How Contained</div><div class="print-val">${contained}</div></div>
-        <div><div class="print-label">Collection Point</div><div class="print-val">${transferPoint||"—"}</div></div>
-      </div>
-    </div>
-
-    <div class="print-section">
-      <h3>Materials</h3>
-      <table class="material-table">
-        <tr><th>Material</th><th>LoW/EWC</th><th>Description</th><th style="text-align:right">Quantity</th></tr>
-        ${matRows}
-        <tr style="background:#f5f5f5;font-weight:800"><td colspan="3">TOTAL</td><td style="text-align:right">${total.toLocaleString()} kg</td></tr>
-      </table>
-    </div>
-
-    <div class="print-section">
-      <h3>${partyLabel}</h3>
-      <div class="print-grid">
-        <div><div class="print-label">Company</div><div class="print-val">${c.name}</div></div>
-        <div><div class="print-label">Contact</div><div class="print-val">${contact||"—"}</div></div>
-        <div class="full"><div class="print-label">Address</div><div class="print-val">${c.address||""}${c.postcode?", "+c.postcode:""}</div></div>
-      </div>
-      <div style="margin-top:10px"><div class="print-label">Signature</div>${wtnState.reviewData.sig1?`<img class="sig-img" src="${wtnState.reviewData.sig1}">`:'<span style="color:#999">No signature</span>'}<div style="margin-top:4px;font-size:13px">${sig1Name||""}</div></div>
-    </div>
-
-    <div class="print-section">
-      <h3>${rukLabel}</h3>
-      <div class="print-grid">
-        <div><div class="print-label">Company</div><div class="print-val">${settings.name||"Recyclables UK"}</div></div>
-        <div><div class="print-label">Representative</div><div class="print-val">${settings.rep||"Ian Brown"}</div></div>
-        <div class="full"><div class="print-label">Address</div><div class="print-val">${rukAddress}</div></div>
-        <div><div class="print-label">Waste Carrier Reg</div><div class="print-val">${settings.reg||"—"}</div></div>
-        <div><div class="print-label">Phone</div><div class="print-val">${settings.phone||"—"}</div></div>
-      </div>
-      <div style="margin-top:10px"><div class="print-label">Signature</div>${wtnState.reviewData.sig2?`<img class="sig-img" src="${wtnState.reviewData.sig2}">`:'<span style="color:#999">No signature</span>'}<div style="margin-top:4px;font-size:13px">${sig2Name||""}</div></div>
-    </div>
-
-    <div class="print-section" style="margin-top:30px;font-size:12px;color:#66736b;border-top:2px solid #ddd;padding-top:10px">
-      This Waste Transfer Note has been created digitally by Recyclables UK. Retain for your records.
-    </div>
-  `;
-
-  navTo("wtn-review");
-}
-
-function saveWTN(){
-  if(!wtnState.reviewData) return;
-  wtnState.reviewData.status = "saved";
-  const wtns = db("wtns")||[];
-  wtns.push(wtnState.reviewData);
-  db("wtns",wtns);
-  toast("WTN Saved: "+wtnState.reviewData.number);
-  setTimeout(()=>{newWTN(); navTo("dashboard");},800);
-}
-
-function newWTN(){
-  wtnState = {direction:"IN",step:1,companyId:"",materials:[],reviewData:null};
-  document.getElementById("wtn-date").value = new Date().toISOString().slice(0,10);
-  document.getElementById("wtn-time").value = new Date().toTimeString().slice(0,5);
-  document.getElementById("wtn-broker").value = "";
-  document.getElementById("wtn-broker-reg").value = "";
-  document.getElementById("wtn-contact").value = "";
-  document.getElementById("sig-party-name").value = "";
-  document.getElementById("sig-ruk-name").value = db("settings")?.rep||"Ian Brown";
-  document.getElementById("wtn-materials").innerHTML = "";
-  addWTNMaterial("card");
-  setWTNDirection("IN");
-  goToStep(1);
-}
-
-function viewWTN(id){
-  const w = (db("wtns")||[]).find(x=>x.id===id);
-  if(!w) return;
-  // Render into print view and show
-  const companies = db("companies");
-  const settings = db("settings");
-  const c = companies.find(x=>x.id===w.companyId)||{};
-  const partyLabel = w.direction==="IN"?"Transferor / Supplier":"Recyclables UK / Transferor";
-  const rukLabel = w.direction==="IN"?"Transferee / Recyclables UK":"Transferee / Customer";
-  let matRows = (w.materials||[]).map(m=>`<tr><td>${m.name}</td><td>${m.code}</td><td>${m.desc}</td><td style="text-align:right;font-weight:700">${m.quantity} kg</td></tr>`).join("");
-  document.getElementById("wtn-print-view").innerHTML = `
-    <div class="no-print" style="margin-bottom:16px">
-      <button class="btn btn-ghost btn-sm" onclick="navTo('archive')">← Back to Archive</button>
-      <div class="row" style="margin-top:10px">
-        <button class="btn btn-secondary" onclick="window.print()">🖨 Print / PDF</button>
-        <button class="btn btn-secondary" onclick="shareWTN('${w.id}')">📤 Share</button>
-        <button class="btn btn-danger" onclick="deleteWTN('${w.id}')">🗑 Delete</button>
-      </div>
-    </div>
-    <h1>♻️ Recyclables UK — Waste Transfer Note</h1>
-    <div class="print-meta">WTN Number: <b>${w.number}</b> &nbsp;|&nbsp; Date: ${w.date} &nbsp;|&nbsp; Time: ${w.time||"—"}</div>
-    <div class="print-section"><h3>Transfer Details</h3>
-      <div class="print-grid">
-        <div><div class="print-label">Direction</div><div class="print-val">${w.direction==="IN"?"Inbound":"Outbound"}</div></div>
-        <div><div class="print-label">Vehicle</div><div class="print-val">${w.vehicle||"—"}</div></div>
-        <div><div class="print-label">How Contained</div><div class="print-val">${w.contained||"—"}</div></div>
-        <div><div class="print-label">Collection Point</div><div class="print-val">${w.transferPoint||"—"}</div></div>
-      </div>
-    </div>
-    <div class="print-section"><h3>Materials</h3>
-      <table class="material-table"><tr><th>Material</th><th>LoW/EWC</th><th>Description</th><th style="text-align:right">Quantity</th></tr>${matRows}<tr style="background:#f5f5f5;font-weight:800"><td colspan="3">TOTAL</td><td style="text-align:right">${(w.totalKg||0).toLocaleString()} kg</td></tr></table>
-    </div>
-    <div class="print-section"><h3>${partyLabel}</h3>
-      <div class="print-grid">
-        <div><div class="print-label">Company</div><div class="print-val">${c.name||"—"}</div></div>
-        <div><div class="print-label">Contact</div><div class="print-val">${w.contact||c.contact||"—"}</div></div>
-        <div class="full"><div class="print-label">Address</div><div class="print-val">${c.address||""}${c.postcode?", "+c.postcode:""}</div></div>
-      </div>
-      <div style="margin-top:10px"><div class="print-label">Signature</div>${w.sig1?`<img class="sig-img" src="${w.sig1}">`:'<span style="color:#999">No signature</span>'}<div style="margin-top:4px;font-size:13px">${w.sig1Name||""}</div></div>
-    </div>
-    <div class="print-section"><h3>${rukLabel}</h3>
-      <div class="print-grid">
-        <div><div class="print-label">Company</div><div class="print-val">${settings.name||"Recyclables UK"}</div></div>
-        <div><div class="print-label">Representative</div><div class="print-val">${settings.rep||"Ian Brown"}</div></div>
-        <div class="full"><div class="print-label">Address</div><div class="print-val">${settings.address||""}</div></div>
-        <div><div class="print-label">Waste Carrier Reg</div><div class="print-val">${settings.reg||"—"}</div></div>
-      </div>
-      <div style="margin-top:10px"><div class="print-label">Signature</div>${w.sig2?`<img class="sig-img" src="${w.sig2}">`:'<span style="color:#999">No signature</span>'}<div style="margin-top:4px;font-size:13px">${w.sig2Name||""}</div></div>
-    </div>
-  `;
-  navTo("wtn-review");
-}
-
 function deleteWTN(id){
-  if(!confirm("Delete this WTN permanently?")) return;
-  let wtns = db("wtns")||[];
-  wtns = wtns.filter(w=>w.id!==id);
-  db("wtns",wtns);
-  toast("WTN deleted");
-  navTo("archive");
+if(!confirm('Delete this WTN?')) return;
+appData.wtns = appData.wtns.filter(w=>w.id!==id);
+saveVault();
+renderHome(); renderArchive();
 }
-
+function printWTN(id){
+const w = appData.wtns.find(x=>x.id===id);
+if(!w) return;
+const win = window.open('','_blank');
+win.document.write(`<html><head><title>WTN ${w.id}</title><style>body{font-family:Arial;padding:40px}h1{color:#2d5a27}table{width:100%;border-collapse:collapse;margin:20px 0}td,th{border:1px solid #ccc;padding:10px;text-align:left}</style></head><body><h1>♻️ Waste Transfer Note</h1><p><strong>ID:</strong> ${w.id}</p><p><strong>Date:</strong> ${formatDate(w.date)}</p><p><strong>Direction:</strong> ${w.direction}</p><p><strong>Company:</strong> ${w.company}</p><p><strong>Contact:</strong> ${w.contact||'N/A'}</p><p><strong>Vehicle:</strong> ${w.vehicle||'N/A'}</p><p><strong>Driver:</strong> ${w.driver||'N/A'}</p><h3>Materials</h3><table><tr><th>Material</th><th>Weight (kg)</th></tr>${w.materials.map(m=>`<tr><td>${m.type}</td><td>${m.weight}</td></tr>`).join('')}</table><p><strong>Notes:</strong> ${w.notes||'None'}</p><p style="margin-top:40px"><strong>Signature:</strong><br><img src="${w.signature}" style="max-width:300px;border:1px solid #ccc"></p></body></html>`);
+win.document.close(); win.print();
+}
 function shareWTN(id){
-  const w = (db("wtns")||[]).find(x=>x.id===id);
-  if(!w) return;
-  const text = `Waste Transfer Note ${w.number} — ${w.direction==="IN"?"Inbound":"Outbound"} — ${w.totalKg}kg — Recyclables UK`;
-  if(navigator.share){navigator.share({title:w.number,text}).catch(()=>{});}
-  else if(navigator.clipboard){navigator.clipboard.writeText(text); toast("WTN details copied");}
-  else{toast("Save as PDF and share manually");}
+const w = appData.wtns.find(x=>x.id===id);
+if(!w) return;
+const total = w.materials.reduce((s,m)=>s+m.weight,0);
+const text = `WTN ${w.id}\n${w.direction.toUpperCase()} - ${w.company}\nDate: ${formatDate(w.date)}\nMaterials: ${w.materials.map(m=>m.type+' '+m.weight+'kg').join(', ')}\nTotal: ${total}kg`;
+if(navigator.share){navigator.share({title:'WTN '+w.id, text});}
+else{navigator.clipboard.writeText(text); toast('WTN details copied');}
 }
 
-/* ================= ARCHIVE ================= */
-function renderArchive(){
-  const search = (document.getElementById("archive-search").value||"").toLowerCase();
-  const dirFilter = document.getElementById("archive-filter-dir").value;
-  const dateFilter = document.getElementById("archive-filter-date").value;
-  const companies = db("companies")||[];
-  let wtns = db("wtns")||[];
-
-  wtns = wtns.filter(w=>{
-    if(dirFilter && w.direction!==dirFilter) return false;
-    if(dateFilter && w.date!==dateFilter) return false;
-    if(search){
-      const c = companies.find(x=>x.id===w.companyId);
-      const hay = (w.number+" "+(c?.name||"")+" "+(w.vehicle||"")+" "+(w.materials||[]).map(m=>m.name).join(" ")).toLowerCase();
-      return hay.includes(search);
-    }
-    return true;
-  }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-
-  const el = document.getElementById("archive-list");
-  if(!wtns.length){el.innerHTML='<div class="empty"><div class="empty-icon">📄</div><h3>No WTNs found</h3><p>Try adjusting your filters.</p></div>';return}
-
-  el.innerHTML = wtns.map(w=>{
-    const c = companies.find(x=>x.id===w.companyId);
-    return `<div class="list-item">
-      <div class="info" onclick="viewWTN('${w.id}')">
-        <div class="title">${w.number}</div>
-        <div class="meta">${w.date} · ${w.direction==="IN"?"📥 Inbound":"📤 Outbound"} · ${w.totalKg}kg · ${c?.name||"Unknown"} · ${w.vehicle||"No vehicle"}</div>
-      </div>
-      <div class="actions no-print">
-        <button class="btn btn-sm btn-secondary" onclick="dupWTN('${w.id}')">📋</button>
-        <button class="btn btn-sm btn-secondary" onclick="shareWTN('${w.id}')">📤</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteWTN('${w.id}')">🗑</button>
-      </div>
-    </div>`;
-  }).join("");
-}
-
-function clearArchiveFilters(){
-  document.getElementById("archive-search").value="";
-  document.getElementById("archive-filter-dir").value="";
-  document.getElementById("archive-filter-date").value="";
-  renderArchive();
-}
-
-function dupWTN(id){
-  const w = (db("wtns")||[]).find(x=>x.id===id);
-  if(!w) return;
-  const newW = {...w,id:"wtn_"+Date.now(),date:new Date().toISOString().slice(0,10),time:new Date().toTimeString().slice(0,5),status:"draft",createdAt:new Date().toISOString()};
-  // regenerate number
-  const companies = db("companies");
-  const c = companies.find(x=>x.id===w.companyId);
-  const slug = (s)=>(s||"PARTY").toUpperCase().replace(/[^A-Z0-9]+/g,"").slice(0,18)||"PARTY";
-  const dkey = newW.date.replace(/-/g,"");
-  const allWtns = db("wtns")||[];
-  const prefix = `RUK-${newW.direction}-${slug(c?.name||"PARTY")}-${dkey}-`;
-  const nums = allWtns.filter(x=>x.number?.startsWith(prefix)).map(x=>parseInt(x.number.split("-").pop())||0);
-  newW.number = prefix + String(Math.max(0,...nums)+1).padStart(5,"0");
-  const wtns = db("wtns");
-  wtns.push(newW);
-  db("wtns",wtns);
-  toast("WTN duplicated: "+newW.number);
-  renderArchive();
-}
-
-/* ================= COMPANIES ================= */
+// ===================== COMPANIES =====================
 function renderCompanies(){
-  const search = (document.getElementById("company-search").value||"").toLowerCase();
-  let companies = db("companies")||[];
-  if(search) companies = companies.filter(c=>c.name.toLowerCase().includes(search)||(c.postcode||"").toLowerCase().includes(search));
-  const el = document.getElementById("companies-list");
-  if(!companies.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏢</div><h3>No companies</h3><p>Add your suppliers and customers.</p></div>';return}
-  el.innerHTML = companies.map(c=>`
-    <div class="list-item" onclick="showCompanyDetail('${c.id}')">
-      <div class="info">
-        <div class="title">${c.name}</div>
-        <div class="meta">${c.contact||"No contact"} · ${c.postcode||"No postcode"} · ${(c.vehicles||[]).length} vehicle(s)</div>
-      </div>
-      <span class="badge badge-saved">${c.pref||"Contact"}</span>
-    </div>
-  `).join("");
+const search = document.getElementById('company-search')?.value.toLowerCase()||'';
+const list = appData.companies.filter(c=>!search || c.name.toLowerCase().includes(search));
+const container = document.getElementById('companies-list');
+if(!list.length){container.innerHTML='<div class="empty"><div class="icon">🏢</div><p>No companies yet</p></div>';return;}
+container.innerHTML = list.map(c=>`<div class="company-card">
+<div class="company-info">
+<h4>${c.name}</h4>
+<p>${c.contact||'No contact'} • ${c.postcode||'No postcode'} • ${c.vehicles||0} vehicle(s)</p>
+</div>
+<div class="company-actions">
+${c.pref==='whatsapp'||c.phone?`<button class="btn-wa" onclick="contactCompany('${c.id}','wa')">WhatsApp</button>`:''}
+${c.email?`<button class="btn-email" onclick="contactCompany('${c.id}','email')">Email</button>`:''}
+</div>
+</div>`).join('');
+// Update dropdown
+const sel = document.getElementById('wtn-company');
+sel.innerHTML = '<option value="">Select company...</option>' + appData.companies.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
 }
-
-function showCompanyModal(id){
-  document.getElementById("company-modal-id").value = id||"";
-  document.getElementById("company-modal-title").textContent = id?"Edit Company":"Add Company";
-  if(id){
-    const c = (db("companies")||[]).find(x=>x.id===id);
-    if(c){
-      document.getElementById("co-name").value = c.name;
-      document.getElementById("co-contact").value = c.contact||"";
-      document.getElementById("co-mobile").value = c.mobile||"";
-      document.getElementById("co-email").value = c.email||"";
-      document.getElementById("co-pref").value = c.pref||"WhatsApp";
-      document.getElementById("co-address").value = c.address||"";
-      document.getElementById("co-postcode").value = c.postcode||"";
-      document.getElementById("co-sic").value = c.sic||"";
-      document.getElementById("co-notes").value = c.notes||"";
-      setTimeout(()=>{if(c.signature) loadSigToCanvas("sig-company",c.signature); else clearSig("sig-company");},100);
-    }
-  } else {
-    ["co-name","co-contact","co-mobile","co-email","co-address","co-postcode","co-sic","co-notes"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("co-pref").value="WhatsApp";
-    clearSig("sig-company");
-  }
-  openModal("modal-company");
-}
-
-function saveCompanyModal(){
-  const id = document.getElementById("company-modal-id").value;
-  const name = document.getElementById("co-name").value.trim();
-  if(!name){toast("Company name is required");return}
-  let companies = db("companies")||[];
-  const data = {
-    id: id || "c_"+Date.now(),
-    name, contact:document.getElementById("co-contact").value.trim(),
-    mobile:document.getElementById("co-mobile").value.trim(),
-    email:document.getElementById("co-email").value.trim(),
-    pref:document.getElementById("co-pref").value,
-    address:document.getElementById("co-address").value.trim(),
-    postcode:document.getElementById("co-postcode").value.trim().toUpperCase(),
-    sic:document.getElementById("co-sic").value.trim(),
-    notes:document.getElementById("co-notes").value.trim(),
-    vehicles: id ? (companies.find(c=>c.id===id)?.vehicles||[]) : [],
-    signature: getSigData("sig-company")|| (id?companies.find(c=>c.id===id)?.signature:"")
-  };
-  if(id){
-    const idx = companies.findIndex(c=>c.id===id);
-    if(idx>=0) companies[idx] = {...companies[idx],...data};
-  } else {
-    companies.push(data);
-  }
-  db("companies",companies);
-  closeModal("modal-company");
-  toast(id?"Company updated":"Company added");
-  renderCompanies();
-}
-
-function showCompanyDetail(id){
-  const c = (db("companies")||[]).find(x=>x.id===id);
-  if(!c) return;
-  const el = document.getElementById("company-detail-content");
-  const vels = (c.vehicles||[]).map(v=>`<span class="chip">${v.reg} <button class="remove" onclick="removeVehicle('${id}','${v.reg}')">×</button></span>`).join("") || '<span style="color:#999;font-size:13px">No vehicles added</span>';
-  const sigHtml = c.signature ? `<img src="${c.signature}" style="max-width:200px;max-height:80px;border:1px solid #ddd;padding:4px">` : '<span style="color:#999">No saved signature</span>';
-  el.innerHTML = `
-    <div class="card">
-      <div class="row" style="justify-content:space-between;margin-bottom:12px">
-        <h2 style="margin:0">${c.name}</h2>
-        <div class="row no-print">
-          <button class="btn btn-sm btn-secondary" onclick="showCompanyModal('${c.id}')">✏️ Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteCompany('${c.id}')">🗑 Delete</button>
-        </div>
-      </div>
-      <div class="grid">
-        <div><label>Contact</label><input value="${c.contact||"—"}" readonly></div>
-        <div><label>Mobile</label><input value="${c.mobile||"—"}" readonly></div>
-        <div><label>Email</label><input value="${c.email||"—"}" readonly></div>
-        <div><label>Preferred Contact</label><input value="${c.pref||"—"}" readonly></div>
-        <div class="full"><label>Address</label><textarea rows="2" readonly>${c.address||""}${c.postcode?"\n"+c.postcode:""}</textarea></div>
-        <div><label>SIC Code</label><input value="${c.sic||"—"}" readonly></div>
-      </div>
-      <div style="margin-top:14px"><label>Vehicles</label><div>${vels}</div></div>
-      <div style="margin-top:14px"><label>Authorised Signature</label><div>${sigHtml}</div></div>
-      ${c.notes?`<div style="margin-top:14px"><label>Notes</label><div style="background:#f9f9f9;padding:10px;border-radius:8px;font-size:14px">${c.notes}</div></div>`:""}
-    </div>
-  `;
-  navTo("company-detail");
-}
-
-function removeVehicle(cid,reg){
-  let companies = db("companies");
-  const c = companies.find(x=>x.id===cid);
-  if(c){c.vehicles = (c.vehicles||[]).filter(v=>v.reg!==reg); db("companies",companies);}
-  showCompanyDetail(cid);
-  toast("Vehicle removed");
-}
-
-function deleteCompany(id){
-  if(!confirm("Delete this company and all its data?")) return;
-  let companies = db("companies").filter(c=>c.id!==id);
-  db("companies",companies);
-  toast("Company deleted");
-  navTo("companies");
-}
-
-/* ================= STOCK ================= */
-function renderStock(){
-  const wtns = db("wtns")||[];
-  const stock = {};
-  Object.keys(MATS).forEach(k=>stock[k]={...MATS[k],total:0});
-  wtns.filter(w=>w.status==="saved").forEach(w=>{
-    (w.materials||[]).forEach(m=>{
-      if(!stock[m.key]) stock[m.key]={name:m.name,code:m.code,desc:m.desc,total:0};
-      if(w.direction==="IN") stock[m.key].total += m.quantity||0;
-      else stock[m.key].total -= m.quantity||0;
-    });
-  });
-  const el = document.getElementById("stock-list");
-  const items = Object.values(stock).filter(s=>s.total!==0).sort((a,b)=>b.total-a.total);
-  if(!items.length){el.innerHTML='<div class="empty"><div class="empty-icon">📦</div><h3>No stock data</h3><p>Create inbound and outbound WTNs to track stock.</p></div>';return}
-  el.innerHTML = items.map(s=>`
-    <div class="stock-card">
-      <div class="stock-icon">📦</div>
-      <div class="stock-info">
-        <div class="stock-name">${s.name}</div>
-        <div class="stock-code">${s.code}</div>
-      </div>
-      <div class="stock-qty">
-        <div class="stock-val">${s.total.toLocaleString()}</div>
-        <div class="stock-unit">kg</div>
-      </div>
-    </div>
-  `).join("");
-}
-
-/* ================= SETTINGS ================= */
-function loadSettings(){
-  const s = db("settings")||DEFAULT_SETTINGS;
-  document.getElementById("set-name").value = s.name||"";
-  document.getElementById("set-rep").value = s.rep||"";
-  document.getElementById("set-address").value = s.address||"";
-  document.getElementById("set-reg").value = s.reg||"";
-  document.getElementById("set-phone").value = s.phone||"";
-  document.getElementById("set-email").value = s.email||"";
-  setTimeout(()=>{if(s.signature) loadSigToCanvas("sig-settings",s.signature);},100);
-}
-
-function saveSettings(){
-  const s = {
-    name:document.getElementById("set-name").value.trim(),
-    rep:document.getElementById("set-rep").value.trim(),
-    address:document.getElementById("set-address").value.trim(),
-    reg:document.getElementById("set-reg").value.trim(),
-    phone:document.getElementById("set-phone").value.trim(),
-    email:document.getElementById("set-email").value.trim(),
-    signature:getSigData("sig-settings")||db("settings")?.signature
-  };
-  db("settings",s);
-  toast("Settings saved");
-}
-
-function exportData(){
-  const data = {
-    settings:db("settings"), companies:db("companies"), wtns:db("wtns"),
-    exportedAt:new Date().toISOString()
-  };
-  const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = "RecyclablesUK_Backup_"+new Date().toISOString().slice(0,10)+".json";
-  a.click(); URL.revokeObjectURL(url);
-  toast("Data exported");
-}
-
-/* ================= SIGNATURES ================= */
-function initSig(id){
-  const c = document.getElementById(id);
-  if(!c) return;
-  const ctx = c.getContext("2d");
-  c.width = c.clientWidth*2; c.height = c.clientHeight*2;
-  ctx.scale(2,2); ctx.lineWidth=2; ctx.lineCap="round"; ctx.lineJoin="round";
-  let down=false;
-  const pos = e=>{const r=c.getBoundingClientRect();return{x:(e.clientX||e.touches?.[0]?.clientX)-r.left,y:(e.clientY||e.touches?.[0]?.clientY)-r.top}};
-  c.onpointerdown = e=>{down=true;c.setPointerCapture(e.pointerId);const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);};
-  c.onpointermove = e=>{if(!down)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();};
-  c.onpointerup = ()=>down=false;
-}
-
-function clearSig(id){
-  const c = document.getElementById(id);
-  if(!c) return;
-  const ctx = c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-}
-
-function getSigData(id){
-  const c = document.getElementById(id);
-  if(!c) return "";
-  // Check if empty
-  const blank = document.createElement("canvas");
-  blank.width=c.width; blank.height=c.height;
-  if(c.toDataURL()===blank.toDataURL()) return "";
-  return c.toDataURL("image/png");
-}
-
-function loadSigToCanvas(id,data){
-  const c = document.getElementById(id);
-  if(!c||!data) return;
-  const ctx = c.getContext("2d");
-  const img = new Image();
-  img.onload = ()=>{ctx.clearRect(0,0,c.width,c.height); ctx.drawImage(img,0,0,c.width/2,c.height/2);};
-  img.src = data;
-}
-
-/* ================= UTILS ================= */
-function companyName(id){const c=(db("companies")||[]).find(x=>x.id===id);return c?.name||"Unknown"}
-function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2500);}
-function openModal(id){document.getElementById(id).classList.add("show");}
-function closeModal(id){document.getElementById(id).classList.remove("show");}
-
-/* ================= INIT ================= */
-initDB();
-newWTN();
-renderDashboard();
-
-// Init all signature canvases when their containers are visible
-setTimeout(()=>{initSig("sig-settings");initSig("sig-company");},500);
-
-// Handle back button
-window.onpopstate = function(){
-  if(currentPage==="wtn-review") navTo("archive");
-  else if(currentPage==="company-detail") navTo("companies");
+function showAddCompany(){document.getElementById('modal-company').style.display='flex';}
+function closeModal(){document.getElementById('modal-company').style.display='none';}
+async function saveCompany(){
+const name = document.getElementById('newco-name').value;
+if(!name){toast('Enter company name');return;}
+const co = {
+id: 'co-'+Date.now(),
+name,
+contact: document.getElementById('newco-contact').value,
+postcode: document.getElementById('newco-postcode').value,
+phone: document.getElementById('newco-phone').value,
+email: document.getElementById('newco-email').value,
+pref: document.getElementById('newco-pref').value,
+vehicles: 0
 };
+appData.companies.push(co);
+await saveVault();
+closeModal();
+renderCompanies();
+toast('Company added');
+// Clear form
+document.getElementById('newco-name').value='';
+document.getElementById('newco-contact').value='';
+document.getElementById('newco-postcode').value='';
+document.getElementById('newco-phone').value='';
+document.getElementById('newco-email').value='';
+}
+function contactCompany(id, type){
+const c = appData.companies.find(x=>x.id===id);
+if(!c) return;
+if(type==='wa' && c.phone){window.open('https://wa.me/'+c.phone.replace(/\D/g,''),'_blank');}
+if(type==='email' && c.email){window.open('mailto:'+c.email,'_blank');}
+}
+
+// ===================== ARCHIVE =====================
+function renderArchive(){
+const container = document.getElementById('all-wtns');
+if(!appData.wtns.length){container.innerHTML='<div class="empty"><div class="icon">📄</div><p>No WTNs saved yet</p></div>';return;}
+container.innerHTML = appData.wtns.slice().reverse().map(w=>renderWtnCard(w)).join('');
+}
+
+// ===================== STOCK =====================
+function renderStock(){
+const container = document.getElementById('stock-list');
+const alerts = document.getElementById('stock-alerts');
+const items = Object.values(appData.stock);
+if(!items.length){container.innerHTML='<div class="empty"><div class="icon">📦</div><p>No stock data yet</p></div>';alerts.innerHTML='<p style="color:#888;font-size:14px">No alerts</p>';return;}
+container.innerHTML = items.map(s=>{
+const min = appData.alerts[s.name.toLowerCase().replace(/[^a-z]/g,'')] || 0;
+const low = min > 0 && s.qty < min;
+return `<div class="stock-row"><span class="stock-name">${s.name}</span><span class="stock-qty ${low?'low':''}">${Math.round(s.qty)} kg ${low?'⚠️ LOW':''}</span></div>`;
+}).join('');
+const lowItems = items.filter(s=>{
+const min = appData.alerts[s.name.toLowerCase().replace(/[^a-z]/g,'')] || 0;
+return min > 0 && s.qty < min;
+});
+if(lowItems.length){
+alerts.innerHTML = lowItems.map(s=>`<div style="color:#c62828;font-size:14px;margin-bottom:6px">⚠️ ${s.name}: ${Math.round(s.qty)}kg (below minimum)</div>`).join('');
+}else{
+alerts.innerHTML = '<p style="color:#4caf50;font-size:14px">✓ All stock levels healthy</p>';
+}
+}
+
+// ===================== SETTINGS =====================
+function loadSettings(){
+const s = appData.settings || {};
+document.getElementById('settings-name').value = s.name || '';
+document.getElementById('settings-rep').value = s.rep || '';
+document.getElementById('settings-address').value = s.address || '';
+document.getElementById('settings-reg').value = s.reg || '';
+document.getElementById('settings-phone').value = s.phone || '';
+document.getElementById('settings-email').value = s.email || '';
+const a = appData.alerts || {};
+document.getElementById('alert-cardboard').value = a.cardboard || '';
+document.getElementById('alert-plastic').value = a.plastic || '';
+document.getElementById('alert-wood').value = a.wood || '';
+document.getElementById('alert-metal').value = a.metal || '';
+}
+async function saveSettings(){
+appData.settings = {
+name: document.getElementById('settings-name').value,
+rep: document.getElementById('settings-rep').value,
+address: document.getElementById('settings-address').value,
+reg: document.getElementById('settings-reg').value,
+phone: document.getElementById('settings-phone').value,
+email: document.getElementById('settings-email').value
+};
+await saveVault();
+toast('Settings saved');
+}
+async function saveAlerts(){
+appData.alerts = {
+cardboard: parseFloat(document.getElementById('alert-cardboard').value)||0,
+plastic: parseFloat(document.getElementById('alert-plastic').value)||0,
+wood: parseFloat(document.getElementById('alert-wood').value)||0,
+metal: parseFloat(document.getElementById('alert-metal').value)||0
+};
+await saveVault();
+toast('Alert levels saved');
+}
+function exportBackup(){
+const blob = new Blob([JSON.stringify(appData,null,2)],{type:'application/json'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'wtnplus-backup-'+new Date().toISOString().split('T')[0]+'.json';
+a.click();
+URL.revokeObjectURL(url);
+toast('Backup downloaded');
+}
+async function clearAllData(){
+if(!confirm('DELETE ALL DATA? This cannot be undone!')) return;
+if(!confirm('Are you absolutely sure? All WTNs, companies and settings will be lost.')) return;
+appData = {wtns:[], companies:[], settings:{}, alerts:{}, stock:{}};
+localStorage.removeItem('wtnplus_vault');
+localStorage.removeItem('wtnplus_pin_hash');
+toast('All data cleared');
+location.reload();
+}
+
+// ===================== UTILS =====================
+function formatDate(d){
+if(!d) return '';
+const dt = new Date(d);
+return dt.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function toast(msg){
+const t = document.getElementById('toast');
+t.textContent = msg;
+t.classList.add('show');
+setTimeout(()=>t.classList.remove('show'),2500);
+}
+function renderAll(){
+renderHome(); renderCompanies(); renderArchive(); renderStock(); loadSettings();
+}
+
+// ===================== INIT =====================
+async function init(){
+const hasPIN = localStorage.getItem('wtnplus_pin_hash');
+if(!hasPIN){
+pinMode = 'setup';
+document.getElementById('pin-title').textContent = 'Create PIN';
+document.getElementById('pin-subtitle').textContent = 'Choose a 4-digit PIN to secure your customer data';
+}else{
+pinMode = 'unlock';
+}
+}
+init();
 </script>
 </body>
 </html>
